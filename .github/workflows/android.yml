@@ -44,6 +44,7 @@ jobs:
         if: github.repository_owner == 'MojoLauncher' && github.ref_name == 'v3_openjdk'
         run: |
           gradle :app_pojavlauncher:bundleGplay
+          mkdir out
           mv app_pojavlauncher/build/outputs/bundle/gplay/app_pojavlauncher-gplay.aab out/app-gplay.aab
 
       - name: Build Debug .apk
