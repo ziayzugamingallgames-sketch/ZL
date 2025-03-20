@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import net.kdt.pojavlaunch.R;
+import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
 
 public class SelectAuthFragment extends Fragment {

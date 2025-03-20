@@ -8,7 +8,7 @@ import android.os.Build;
 
 import androidx.core.app.NotificationCompat;
 
-import net.kdt.pojavlaunch.R;
+import git.artdeell.mojo.R;
 
 public class NotificationUtils {
 

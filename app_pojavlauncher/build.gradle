@@ -1,72 +1,32 @@
 plugins {
     id 'com.android.application' version '8.7.2'
+    id 'de.undercouch.download' version '5.6.0'
+    id 'org.ajoberstar.grgit' version '4.1.1'
 }
+
+import de.undercouch.gradle.tasks.download.Download
 
 static def getDate() { return new Date().format('yyyyMMdd') }
 
 static def getDateSeconds() {
     if (System.getenv("GITHUB_ACTIONS") == "true") {
-        return 9934841 + Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER"))
+        return Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER"))
     } else {
         return 172005
     }
 }
 
 def getVersionName = {
-    // Get the last version tag, as well as the short head of the last commit
-    ByteArrayOutputStream TAG = new ByteArrayOutputStream()
-    ByteArrayOutputStream BRANCH = new ByteArrayOutputStream()
-    // Used by the fallback for github actions
-    ByteArrayOutputStream TAG_PART_COMMIT = new ByteArrayOutputStream()
-    String TAG_STRING
-
-    exec {
-        try {
-            commandLine 'git', 'describe', '--tags'
-            ignoreExitValue true
-            standardOutput = TAG
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    if (TAG.toString() == "") {
-        exec {
-            // Fallback for action builds
-            try {
-                commandLine 'git', 'describe', '--always', '--tags'
-                ignoreExitValue true
-                standardOutput = TAG_PART_COMMIT
-            } catch (Exception e) {
-            }
-        }
-    }
-
-
-    if(TAG.toString() != ""){
-        TAG_STRING = TAG.toString()
+    def currentBranch = grgit.branch.current()
+    def latestCommit = grgit.log(maxCommits: 1)
+    def dateToday = getDate();
+    if(currentBranch == null || latestCommit == null) {
+        return "LOCAL-${dateToday}";
     }else {
-        if(TAG_PART_COMMIT.toString().trim() == ""){
-             //Fallback no repo
-            return ("LOCAL-" + "${getDate()}")
-        }else {
-            // Used by github actions
-            TAG_STRING =  'gladiolus-' + "${getDate()}" + "-" + TAG_PART_COMMIT.toString().trim()
-        }
-
+        def branchName = currentBranch.getName();
+        def commitAbbreviation = latestCommit.abbreviatedId;
+        return "hebe-${dateToday}-${commitAbbreviation}-${branchName}"
     }
-
-    exec {
-        try {
-            commandLine 'git', 'branch', '--show-current'
-            ignoreExitValue true
-            standardOutput = BRANCH
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    return TAG_STRING.trim().replace("-g", "-") + "-" + BRANCH.toString().trim()
 }
 
 def getCFApiKey = {
@@ -88,7 +48,7 @@ configurations {
 }
 
 android {
-    namespace 'net.kdt.pojavlaunch'
+    namespace 'git.artdeell.mojo'
 
     compileSdk = 34
 
@@ -112,7 +72,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "net.kdt.pojavlaunch"
+        applicationId "git.artdeell.mojo"
         minSdkVersion 21
         targetSdkVersion 34
         versionCode getDateSeconds()
@@ -128,9 +88,8 @@ android {
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.customDebug
-            resValue 'string', 'application_package', 'net.kdt.pojavlaunch.debug'
-            resValue 'string', 'storageProviderAuthorities', 'net.kdt.pojavlaunch.scoped.gamefolder.debug'
-            resValue 'string', 'shareProviderAuthority', 'net.kdt.pojavlaunch.scoped.controlfolder.debug'
+            resValue 'string', 'application_package', 'git.artdeell.mojo.debug'
+            resValue 'string', 'storageProviderAuthorities', 'git.artdeell.mojo.scoped.gamefolder.debug'
         }
         proguard {
             initWith debug
@@ -149,8 +108,8 @@ android {
             // defaultConfig already set
             // multiDexEnabled = true
             // debuggable = true
-            resValue 'string', 'storageProviderAuthorities', 'net.kdt.pojavlaunch.scoped.gamefolder'
-            resValue 'string', 'application_package', 'net.kdt.pojavlaunch'
+            resValue 'string', 'storageProviderAuthorities', 'git.artdeell.mojo.scoped.gamefolder'
+            resValue 'string', 'application_package', 'git.artdeell.mojo'
         }
         gplay {
             initWith release
@@ -190,6 +149,115 @@ android {
     }
 
     buildToolsVersion = '34.0.0'
+}
+
+class AssetTaskRegistrar {
+    private Project project
+    private Task mergeAssetsTask
+    private File targetAssetsDir
+    private String variantName
+    private File targetDownloadDir
+
+    AssetTaskRegistrar(Project project) {
+        this.project = project
+
+        targetDownloadDir = new File(project.projectDir, "build/intermediates/download_deps")
+        targetAssetsDir = new File(project.projectDir, "build/intermediates/remote_asset_set")
+
+        createDirectories(targetDownloadDir)
+        createDirectories(targetAssetsDir)
+
+        project.android.sourceSets.main.assets.srcDirs += targetAssetsDir.absolutePath
+    }
+
+    def setVariant(variant) {
+        variantName = variant.getName().capitalize()
+        mergeAssetsTask = variant.getMergeAssetsProvider().get()
+    }
+
+    static def createDirectories(File location) {
+        if(!location.isDirectory() && !location.mkdirs())
+            throw new RuntimeException("Failed to create directory "+location.getAbsolutePath())
+    }
+
+    static def writeVersion(File dir) {
+        File versionFile = new File(dir, "version")
+        versionFile.write(String.valueOf(new Date().getTime()))
+    }
+
+    private def assetDestination(String relativePath) {
+        return new File(targetAssetsDir, relativePath);
+    }
+
+    private def onlineUnzipTask(String downloadUrl, String name, File targetExtractionDir) {
+        createDirectories targetExtractionDir
+
+        def downloadTarget = new File(targetDownloadDir, name)
+
+        def dependencySuffix = "${name}${variantName}"
+        def downloadTask = project.tasks.register("download"+dependencySuffix, Download) {
+            src downloadUrl
+            dest downloadTarget
+            overwrite false
+        };
+
+        def unzipTask = project.tasks.register("unzip"+dependencySuffix, Copy) {
+            from project.zipTree(downloadTarget)
+            into targetExtractionDir
+            dependsOn downloadTask
+        }
+        return unzipTask
+    }
+
+    def onlineZipDependency(String downloadUrl, String name, String relativePath) {
+        mergeAssetsTask.dependsOn(onlineUnzipTask downloadUrl, name, assetDestination(relativePath))
+    }
+
+    def projectJarDependency(Project project, String relativePath) {
+        def targetDir = assetDestination(relativePath)
+        createDirectories targetDir
+
+        project.tasks.withType(org.gradle.jvm.tasks.Jar.class).configureEach {
+            it.destinationDirectory = targetDir
+            mergeAssetsTask.dependsOn it
+            doLast {
+                if(!it.didWork) return
+                writeVersion targetDir
+            }
+        }
+    }
+
+    def onlineJarDependency(String downloadUrl, String name, String relativePath) {
+        File targetDir = assetDestination(relativePath);
+        def unzipTask = onlineUnzipTask(downloadUrl, name, targetDir).get()
+        unzipTask.doLast {
+            println("unzipTask.doLast()")
+            if(!unzipTask.didWork) return
+            writeVersion targetDir
+        }
+        mergeAssetsTask.dependsOn(unzipTask)
+    }
+}
+
+def registrar = new AssetTaskRegistrar(project);
+
+android.applicationVariants.configureEach { variant ->
+    registrar.setVariant(variant)
+
+    registrar.projectJarDependency project(":forge_installer"), "components/forge_installer"
+    registrar.projectJarDependency project(":arc_dns_injector"), "components/arc_dns_injector"
+    registrar.projectJarDependency project(":jre_lwjgl3glfw"), "components/lwjgl3"
+
+    def jreBuildRepository = "https://nightly.link/MojoLauncher/android-openjdk-build-multiarch/workflows/build/";
+
+    registrar.onlineZipDependency jreBuildRepository+"buildjre8/jre8-pojav.zip", "ComponentRuntime8", "components/jre/"
+    registrar.onlineZipDependency jreBuildRepository+"buildjre17-21/jre17-pojav.zip", "ComponentRuntime17", "components/jre-new"
+    registrar.onlineZipDependency jreBuildRepository+"buildjre17-21/jre21-pojav.zip", "ComponentRuntime21", "components/jre-21"
+
+    def cacioBuildRepository = "https://nightly.link/MojoLauncher/%s/workflows/maven/master/caciocavallo.zip"
+
+    registrar.onlineJarDependency String.format(cacioBuildRepository, "caciocavallo"), "Caciocavallo", "components/caciocavallo"
+    registrar.onlineJarDependency String.format(cacioBuildRepository, "caciocavallo17"), "Caciocavallo17", "components/caciocavallo17"
 }
 
 afterEvaluate {

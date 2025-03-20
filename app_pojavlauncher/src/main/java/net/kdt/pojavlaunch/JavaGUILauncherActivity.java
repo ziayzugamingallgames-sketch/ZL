@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import git.artdeell.mojo.R;
+
 public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouchListener {
 
     private AWTCanvasView mTextureView;

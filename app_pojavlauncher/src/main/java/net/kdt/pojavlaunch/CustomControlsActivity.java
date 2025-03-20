@@ -19,6 +19,8 @@ import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
 import java.io.IOException;
 
+import git.artdeell.mojo.R;
+
 
 public class CustomControlsActivity extends BaseActivity implements EditorExitable {
 	private DrawerLayout mDrawerLayout;

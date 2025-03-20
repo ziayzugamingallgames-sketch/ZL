@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import git.artdeell.mojo.R;
+
 /**
  * An activity dedicated to importing control files.
  */

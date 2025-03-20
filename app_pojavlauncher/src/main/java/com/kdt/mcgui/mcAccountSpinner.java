@@ -30,7 +30,7 @@ import androidx.core.content.res.ResourcesCompat;
 
 
 import net.kdt.pojavlaunch.PojavProfile;
-import net.kdt.pojavlaunch.R;
+import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.authenticator.listener.DoneListener;
 import net.kdt.pojavlaunch.authenticator.listener.ErrorListener;

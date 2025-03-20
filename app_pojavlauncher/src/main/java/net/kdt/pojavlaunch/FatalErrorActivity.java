@@ -9,6 +9,8 @@ import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import git.artdeell.mojo.R;
+
 public class FatalErrorActivity extends AppCompatActivity {
 
 	@Override

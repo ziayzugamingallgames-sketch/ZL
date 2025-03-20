@@ -32,6 +32,8 @@ import net.kdt.pojavlaunch.plugins.FFmpegPlugin;
 import net.kdt.pojavlaunch.prefs.*;
 import org.lwjgl.glfw.*;
 
+import git.artdeell.mojo.R;
+
 public class JREUtils {
     private JREUtils() {}
 

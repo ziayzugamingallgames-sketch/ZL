@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.*;
 import net.kdt.pojavlaunch.*;
 
+import git.artdeell.mojo.R;
+
 @Keep
 public class CustomControls {
 	public int version = -1;

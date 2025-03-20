@@ -97,6 +97,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import git.artdeell.mojo.BuildConfig;
+import git.artdeell.mojo.R;
+
 @SuppressWarnings("IOStreamConstructor")
 public final class Tools {
     public  static final float BYTE_TO_MB = 1024 * 1024;
