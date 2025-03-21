@@ -36,7 +36,7 @@
             <ImageView
                 android:layout_width="@dimen/_14sdp"
                 android:layout_height="@dimen/_14sdp"
-                android:src="@drawable/ic_edit_profile"
+                android:src="@drawable/ic_px_edit"
                 android:background="@drawable/background_icon_edit"
                 app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_profile_icon"
                 app:layout_constraintEnd_toEndOf="@+id/vprof_editor_profile_icon"/>
