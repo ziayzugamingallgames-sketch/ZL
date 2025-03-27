@@ -4,11 +4,10 @@ import com.kdt.mcgui.ProgressLayout;
 
 import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.instances.InstanceManager;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.FileUtils;
-import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
-import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,14 +55,13 @@ public class FabriclikeDownloadTask implements Runnable, Tools.DownloaderFeedbac
         File versionJsonFile = new File(versionJsonDir, versionId+".json");
         FileUtils.ensureDirectory(versionJsonDir);
         Tools.write(versionJsonFile.getAbsolutePath(), fabricJson);
+
         if(mCreateProfile) {
-            LauncherProfiles.load();
-            MinecraftProfile fabricProfile = new MinecraftProfile();
-            fabricProfile.lastVersionId = versionId;
-            fabricProfile.name = mUtils.getName();
-            fabricProfile.icon = mUtils.getIconName();
-            LauncherProfiles.insertMinecraftProfile(fabricProfile);
-            LauncherProfiles.write();
+            InstanceManager.createInstance(i -> {
+                i.versionId = versionId;
+                i.name = mUtils.getName();
+                i.icon = mUtils.getIconName();
+            }, "fabric-"+versionId);
         }
         return true;
     }

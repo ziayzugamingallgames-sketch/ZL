@@ -1,7 +1,6 @@
 package com.kdt.mcgui;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static net.kdt.pojavlaunch.fragments.ProfileEditorFragment.DELETED_PROFILE;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -23,12 +22,11 @@ import androidx.fragment.app.FragmentActivity;
 
 import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.extra.ExtraConstants;
-import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.fragments.ProfileEditorFragment;
 import net.kdt.pojavlaunch.fragments.ProfileTypeSelectFragment;
-import net.kdt.pojavlaunch.prefs.LauncherPreferences;
-import net.kdt.pojavlaunch.profiles.ProfileAdapter;
+import net.kdt.pojavlaunch.instances.Instance;
+import net.kdt.pojavlaunch.instances.InstanceManager;
+import net.kdt.pojavlaunch.instances.InstanceAdapter;
 import net.kdt.pojavlaunch.profiles.ProfileAdapterExtra;
 
 import fr.spse.extended_view.ExtendedTextView;
@@ -58,7 +56,7 @@ public class mcVersionSpinner extends ExtendedTextView {
     private Object mPopupAnimation;
     private int mSelectedIndex;
 
-    private final ProfileAdapter mProfileAdapter = new ProfileAdapter(new ProfileAdapterExtra[]{
+    private final InstanceAdapter mProfileAdapter = new InstanceAdapter(new ProfileAdapterExtra[]{
             new ProfileAdapterExtra(VERSION_SPINNER_PROFILE_CREATE,
                     R.string.create_profile,
                     ResourcesCompat.getDrawable(getResources(), R.drawable.ic_add, null)),
@@ -68,10 +66,7 @@ public class mcVersionSpinner extends ExtendedTextView {
     /** Set the selection AND saves it as a shared preference */
     public void setProfileSelection(int position){
         setSelection(position);
-        LauncherPreferences.DEFAULT_PREF.edit()
-                .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE,
-                        mProfileAdapter.getItem(position).toString())
-                .apply();
+        InstanceManager.setSelectedInstance((Instance) mProfileAdapter.getItem(position));
     }
 
     public void setSelection(int position){
@@ -104,16 +99,9 @@ public class mcVersionSpinner extends ExtendedTextView {
         setPaddingRelative(startPadding, 0, endPadding, 0);
         setCompoundDrawablePadding(startPadding);
 
-        int profileIndex;
-        String extra_value = (String) ExtraCore.consumeValue(ExtraConstants.REFRESH_VERSION_SPINNER);
-        if(extra_value != null){
-            profileIndex = extra_value.equals(DELETED_PROFILE) ? 0
-                    : getProfileAdapter().resolveProfileIndex(extra_value);
-        }else
-            profileIndex = mProfileAdapter.resolveProfileIndex(
-                    LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE,""));
+        int instanceIndex = mProfileAdapter.resolveInstanceIndex(InstanceManager.getSelectedListedInstance());
 
-        setProfileSelection(Math.max(0,profileIndex));
+        setProfileSelection(Math.max(0,instanceIndex));
 
         // Popup window behavior
         setOnClickListener(new OnClickListener() {
@@ -149,7 +137,7 @@ public class mcVersionSpinner extends ExtendedTextView {
         mListView.setAdapter(mProfileAdapter);
         mListView.setOnItemClickListener((parent, view, position, id) -> {
             Object item = mProfileAdapter.getItem(position);
-            if(item instanceof String) {
+            if(item instanceof Instance) {
                 hidePopup(true);
                 setProfileSelection(position);
             }else if(item instanceof ProfileAdapterExtra) {
@@ -193,9 +181,5 @@ public class mcVersionSpinner extends ExtendedTextView {
         }else {
             mPopupWindow.dismiss();
         }
-    }
-
-    public ProfileAdapter getProfileAdapter() {
-        return mProfileAdapter;
     }
 }

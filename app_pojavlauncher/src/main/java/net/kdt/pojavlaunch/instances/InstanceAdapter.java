@@ -1,4 +1,4 @@
-package net.kdt.pojavlaunch.profiles;
+package net.kdt.pojavlaunch.instances;
 
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -11,60 +11,50 @@ import androidx.core.graphics.ColorUtils;
 
 import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.prefs.LauncherPreferences;
-import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
-import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
+import net.kdt.pojavlaunch.profiles.ProfileAdapterExtra;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import fr.spse.extended_view.ExtendedTextView;
 
 /*
  * Adapter for listing launcher profiles in a Spinner
  */
-public class ProfileAdapter extends BaseAdapter {
-    private Map<String, MinecraftProfile> mProfiles;
-    private final MinecraftProfile dummy = new MinecraftProfile();
-    private List<String> mProfileList;
+public class InstanceAdapter extends BaseAdapter {
+    private List<Instance> mInstances;
     private ProfileAdapterExtra[] mExtraEntires;
 
-    public ProfileAdapter(ProfileAdapterExtra[] extraEntries) {
+
+    public InstanceAdapter(ProfileAdapterExtra[] extraEntries) {
         reloadProfiles(extraEntries);
     }
-    /*
-     * Gets how much profiles are loaded in the adapter right now
-     * @returns loaded profile count
+    /**
+     * @return how much entries (both instances and extra adapter entries) are in the adapter right now
      */
     @Override
     public int getCount() {
-        return mProfileList.size() + mExtraEntires.length;
+        return mInstances.size() + mExtraEntires.length;
     }
-    /*
-     * Gets the profile at a given index
-     * @param position index to retreive
-     * @returns MinecraftProfile name or null
+    /**
+     * Gets the adapter entry at a given index
+     * @param position index to retrieve
+     * @return Instance, ProfileAdapterExtra or null
      */
     @Override
     public Object getItem(int position) {
-        int profileListSize = mProfileList.size();
-        int extraPosition = position - profileListSize;
-        if(position < profileListSize){
-            String profileName = mProfileList.get(position);
-            if(mProfiles.containsKey(profileName)) return profileName;
-        }else if(extraPosition >= 0 && extraPosition < mExtraEntires.length) {
+        int instanceListSize = mInstances.size();
+        int extraPosition = position - instanceListSize;
+        if(position < instanceListSize) {
+            return mInstances.get(position);
+        }else if(extraPosition >= 0 && extraPosition < mExtraEntires.length){
             return mExtraEntires[extraPosition];
         }
         return null;
     }
 
 
-
-    public int resolveProfileIndex(String name) {
-        return mProfileList.indexOf(name);
+    public int resolveInstanceIndex(Instance instance) {
+        return mInstances.indexOf(instance);
     }
 
     @Override
@@ -74,8 +64,7 @@ public class ProfileAdapter extends BaseAdapter {
 
     @Override
     public void notifyDataSetChanged() {
-        mProfiles = new HashMap<>(LauncherProfiles.mainProfileJson.profiles);
-        mProfileList = new ArrayList<>(Arrays.asList(mProfiles.keySet().toArray(new String[0])));
+        mInstances = InstanceManager.getImmutableInstanceList();
         super.notifyDataSetChanged();
     }
 
@@ -87,22 +76,23 @@ public class ProfileAdapter extends BaseAdapter {
         return v;
     }
 
-    public void setViewProfile(View v, String nm, boolean displaySelection) {
+    public void setViewInstance(View v, Instance i, boolean displaySelection) {
         ExtendedTextView extendedTextView = (ExtendedTextView) v;
 
-        MinecraftProfile minecraftProfile = mProfiles.get(nm);
-        if(minecraftProfile == null) minecraftProfile = dummy;
-        Drawable cachedIcon = ProfileIconCache.fetchIcon(v.getResources(), nm, minecraftProfile.icon);
+        //MinecraftProfile minecraftProfile = mProfiles.get(nm);
+        //if(minecraftProfile == null) minecraftProfile = dummy;
+        Drawable cachedIcon = InstanceIconProvider.fetchIcon(v.getResources(), i);
         extendedTextView.setCompoundDrawablesRelative(cachedIcon, null, extendedTextView.getCompoundsDrawables()[2], null);
 
         // Historically, the profile name "New" was hardcoded as the default profile name
         // We consider "New" the same as putting no name at all
-        String profileName = (Tools.isValidString(minecraftProfile.name) && !"New".equalsIgnoreCase(minecraftProfile.name)) ? minecraftProfile.name : null;
-        String versionName = minecraftProfile.lastVersionId;
 
-        if (MinecraftProfile.LATEST_RELEASE.equalsIgnoreCase(versionName))
+        String profileName = Tools.validOrNullString(i.name);
+        String versionName = Tools.validOrNullString(i.versionId);
+
+        if (Instance.VERSION_LATEST_RELEASE.equalsIgnoreCase(versionName))
             versionName = v.getContext().getString(R.string.profiles_latest_release);
-        else if (MinecraftProfile.LATEST_SNAPSHOT.equalsIgnoreCase(versionName))
+        else if (Instance.VERSION_LATEST_SNAPSHOT.equalsIgnoreCase(versionName))
             versionName = v.getContext().getString(R.string.profiles_latest_snapshot);
 
         if (versionName == null && profileName != null)
@@ -112,10 +102,11 @@ public class ProfileAdapter extends BaseAdapter {
         else extendedTextView.setText(String.format("%s - %s", profileName, versionName));
 
         // Set selected background if needed
-        if(displaySelection){
-            String selectedProfile = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE,"");
-            extendedTextView.setBackgroundColor(selectedProfile.equals(nm) ? ColorUtils.setAlphaComponent(Color.WHITE,60) : Color.TRANSPARENT);
-        }else extendedTextView.setBackgroundColor(Color.TRANSPARENT);
+        if(displaySelection && i.isSelected()) {
+            extendedTextView.setBackgroundColor(ColorUtils.setAlphaComponent(Color.WHITE, 60));
+        }else {
+            extendedTextView.setBackgroundColor(Color.TRANSPARENT);
+        }
     }
 
     public void setViewExtra(View v, ProfileAdapterExtra extra) {
@@ -126,18 +117,16 @@ public class ProfileAdapter extends BaseAdapter {
     }
 
     public void setView(View v, Object object, boolean displaySelection) {
-        if(object instanceof String) {
-            setViewProfile(v, (String) object, displaySelection);
+        if(object instanceof Instance) {
+            setViewInstance(v, (Instance) object, displaySelection);
         }else if(object instanceof ProfileAdapterExtra) {
             setViewExtra(v, (ProfileAdapterExtra) object);
         }
     }
 
     /** Reload profiles from the file */
-    public void reloadProfiles(){
-        LauncherProfiles.load();
-        mProfiles = new HashMap<>(LauncherProfiles.mainProfileJson.profiles);
-        mProfileList = new ArrayList<>(Arrays.asList(mProfiles.keySet().toArray(new String[0])));
+    public void reloadProfiles() {
+        mInstances = InstanceManager.getImmutableInstanceList();
         notifyDataSetChanged();
     }
 
