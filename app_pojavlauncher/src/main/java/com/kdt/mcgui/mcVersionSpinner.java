@@ -22,12 +22,12 @@ import androidx.fragment.app.FragmentActivity;
 
 import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.fragments.ProfileEditorFragment;
+import net.kdt.pojavlaunch.fragments.InstanceEditorFragment;
 import net.kdt.pojavlaunch.fragments.ProfileTypeSelectFragment;
 import net.kdt.pojavlaunch.instances.Instance;
 import net.kdt.pojavlaunch.instances.InstanceManager;
 import net.kdt.pojavlaunch.instances.InstanceAdapter;
-import net.kdt.pojavlaunch.profiles.ProfileAdapterExtra;
+import net.kdt.pojavlaunch.instances.InstanceAdapterExtra;
 
 import fr.spse.extended_view.ExtendedTextView;
 
@@ -56,8 +56,8 @@ public class mcVersionSpinner extends ExtendedTextView {
     private Object mPopupAnimation;
     private int mSelectedIndex;
 
-    private final InstanceAdapter mProfileAdapter = new InstanceAdapter(new ProfileAdapterExtra[]{
-            new ProfileAdapterExtra(VERSION_SPINNER_PROFILE_CREATE,
+    private final InstanceAdapter mProfileAdapter = new InstanceAdapter(new InstanceAdapterExtra[]{
+            new InstanceAdapterExtra(VERSION_SPINNER_PROFILE_CREATE,
                     R.string.create_profile,
                     ResourcesCompat.getDrawable(getResources(), R.drawable.ic_add, null)),
     });
@@ -77,10 +77,10 @@ public class mcVersionSpinner extends ExtendedTextView {
 
     public void openProfileEditor(FragmentActivity fragmentActivity) {
         Object currentSelection = mProfileAdapter.getItem(mSelectedIndex);
-        if(currentSelection instanceof ProfileAdapterExtra) {
-            performExtraAction((ProfileAdapterExtra) currentSelection);
+        if(currentSelection instanceof InstanceAdapterExtra) {
+            performExtraAction((InstanceAdapterExtra) currentSelection);
         }else{
-            Tools.swapFragment(fragmentActivity, ProfileEditorFragment.class, ProfileEditorFragment.TAG, null);
+            Tools.swapFragment(fragmentActivity, InstanceEditorFragment.class, InstanceEditorFragment.TAG, null);
         }
     }
 
@@ -121,7 +121,7 @@ public class mcVersionSpinner extends ExtendedTextView {
         });
     }
 
-    private void performExtraAction(ProfileAdapterExtra extra) {
+    private void performExtraAction(InstanceAdapterExtra extra) {
         //Replace with switch-case if you want to add more extra actions
         if (extra.id == VERSION_SPINNER_PROFILE_CREATE) {
             Tools.swapFragment((FragmentActivity) getContext(), ProfileTypeSelectFragment.class,
@@ -140,9 +140,9 @@ public class mcVersionSpinner extends ExtendedTextView {
             if(item instanceof Instance) {
                 hidePopup(true);
                 setProfileSelection(position);
-            }else if(item instanceof ProfileAdapterExtra) {
+            }else if(item instanceof InstanceAdapterExtra) {
                 hidePopup(false);
-                performExtraAction((ProfileAdapterExtra) item);
+                performExtraAction((InstanceAdapterExtra) item);
             }
         });
 

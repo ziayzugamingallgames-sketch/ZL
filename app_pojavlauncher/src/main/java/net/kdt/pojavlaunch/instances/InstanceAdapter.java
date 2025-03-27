@@ -11,7 +11,6 @@ import androidx.core.graphics.ColorUtils;
 
 import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.profiles.ProfileAdapterExtra;
 
 import java.util.List;
 
@@ -22,10 +21,10 @@ import fr.spse.extended_view.ExtendedTextView;
  */
 public class InstanceAdapter extends BaseAdapter {
     private List<Instance> mInstances;
-    private ProfileAdapterExtra[] mExtraEntires;
+    private InstanceAdapterExtra[] mExtraEntires;
 
 
-    public InstanceAdapter(ProfileAdapterExtra[] extraEntries) {
+    public InstanceAdapter(InstanceAdapterExtra[] extraEntries) {
         reloadProfiles(extraEntries);
     }
     /**
@@ -109,7 +108,7 @@ public class InstanceAdapter extends BaseAdapter {
         }
     }
 
-    public void setViewExtra(View v, ProfileAdapterExtra extra) {
+    public void setViewExtra(View v, InstanceAdapterExtra extra) {
         ExtendedTextView extendedTextView = (ExtendedTextView) v;
         extendedTextView.setCompoundDrawablesRelative(extra.icon, null, extendedTextView.getCompoundsDrawables()[2], null);
         extendedTextView.setText(extra.name);
@@ -119,8 +118,8 @@ public class InstanceAdapter extends BaseAdapter {
     public void setView(View v, Object object, boolean displaySelection) {
         if(object instanceof Instance) {
             setViewInstance(v, (Instance) object, displaySelection);
-        }else if(object instanceof ProfileAdapterExtra) {
-            setViewExtra(v, (ProfileAdapterExtra) object);
+        }else if(object instanceof InstanceAdapterExtra) {
+            setViewExtra(v, (InstanceAdapterExtra) object);
         }
     }
 
@@ -131,8 +130,8 @@ public class InstanceAdapter extends BaseAdapter {
     }
 
     /** Reload profiles from the file, with additional extra entries */
-    public void reloadProfiles(ProfileAdapterExtra[] extraEntries) {
-        if(extraEntries == null) mExtraEntires = new ProfileAdapterExtra[0];
+    public void reloadProfiles(InstanceAdapterExtra[] extraEntries) {
+        if(extraEntries == null) mExtraEntires = new InstanceAdapterExtra[0];
         else mExtraEntires = extraEntries;
         this.reloadProfiles();
     }

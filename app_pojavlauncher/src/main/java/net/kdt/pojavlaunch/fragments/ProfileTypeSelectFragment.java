@@ -27,8 +27,8 @@ public class ProfileTypeSelectFragment extends Fragment {
             try {
                 Instance instance = InstanceManager.createDefaultInstance();
                 InstanceManager.setSelectedInstance(instance);
-                Tools.swapFragment(requireActivity(), ProfileEditorFragment.class,
-                        ProfileEditorFragment.TAG, new Bundle(1));
+                Tools.swapFragment(requireActivity(), InstanceEditorFragment.class,
+                        InstanceEditorFragment.TAG, new Bundle(1));
             }catch (IOException e) {
                 Tools.showError(view.getContext(), e);
             }

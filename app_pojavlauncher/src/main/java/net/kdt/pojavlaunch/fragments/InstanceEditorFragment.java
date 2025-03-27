@@ -37,8 +37,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ProfileEditorFragment extends Fragment implements CropperUtils.CropperListener{
-    public static final String TAG = "ProfileEditorFragment";
+public class InstanceEditorFragment extends Fragment implements CropperUtils.CropperListener{
+    public static final String TAG = "InstanceEditorFragment";
 
     private Instance mInstance;
     private String mSelectedControlLayout;
@@ -46,13 +46,13 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
     private Spinner mDefaultRuntime, mDefaultRenderer;
     private EditText mDefaultName, mDefaultJvmArgument;
     private TextView mDefaultVersion, mDefaultControl;
-    private ImageView mProfileIcon;
+    private ImageView mInstanceIcon;
     private final ActivityResultLauncher<?> mCropperLauncher = CropperUtils.registerCropper(this, this);
 
     private List<String> mRenderNames;
 
-    public ProfileEditorFragment(){
-        super(R.layout.fragment_profile_editor);
+    public InstanceEditorFragment(){
+        super(R.layout.fragment_instance_editor);
     }
 
     @Nullable
@@ -106,7 +106,7 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mDefaultVersion.setOnClickListener(versionSelectListener);
 
         // Set up the icon change click listener
-        mProfileIcon.setOnClickListener(v -> CropperUtils.startCropper(mCropperLauncher));
+        mInstanceIcon.setOnClickListener(v -> CropperUtils.startCropper(mCropperLauncher));
 
         loadValues(InstanceManager.getSelectedListedInstance(), view.getContext());
     }
@@ -133,7 +133,7 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
 
     private void loadValues(@NonNull Instance instance, @NonNull Context context){
         mInstance = instance;
-        mProfileIcon.setImageDrawable(
+        mInstanceIcon.setImageDrawable(
                 InstanceIconProvider.fetchIcon(getResources(), instance)
         );
 
@@ -163,17 +163,17 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
     private void bindViews(@NonNull View view){
         mDefaultControl = view.findViewById(R.id.vprof_editor_ctrl_spinner);
         mDefaultRuntime = view.findViewById(R.id.vprof_editor_spinner_runtime);
-        mDefaultRenderer = view.findViewById(R.id.vprof_editor_profile_renderer);
+        mDefaultRenderer = view.findViewById(R.id.vprof_editor_instance_renderer);
         mDefaultVersion = view.findViewById(R.id.vprof_editor_version_spinner);
 
-        mDefaultName = view.findViewById(R.id.vprof_editor_profile_name);
+        mDefaultName = view.findViewById(R.id.vprof_editor_instance_name);
         mDefaultJvmArgument = view.findViewById(R.id.vprof_editor_jre_args);
 
         mSaveButton = view.findViewById(R.id.vprof_editor_save_button);
         mDeleteButton = view.findViewById(R.id.vprof_editor_delete_button);
         mControlSelectButton = view.findViewById(R.id.vprof_editor_ctrl_button);
         mVersionSelectButton = view.findViewById(R.id.vprof_editor_version_button);
-        mProfileIcon = view.findViewById(R.id.vprof_editor_profile_icon);
+        mInstanceIcon = view.findViewById(R.id.vprof_editor_instance_icon);
     }
 
     private void save(){
@@ -202,7 +202,7 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
 
     @Override
     public void onCropped(Bitmap contentBitmap) {
-        mProfileIcon.setImageBitmap(contentBitmap);
+        mInstanceIcon.setImageBitmap(contentBitmap);
         Log.i("bitmap", "w="+contentBitmap.getWidth() +" h="+contentBitmap.getHeight());
         try {
             mInstance.encodeNewIcon(contentBitmap);

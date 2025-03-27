@@ -21,7 +21,7 @@
             android:paddingHorizontal="@dimen/fragment_padding_medium">
 
             <ImageView
-                android:id="@+id/vprof_editor_profile_icon"
+                android:id="@+id/vprof_editor_instance_icon"
                 android:layout_width="@dimen/_50sdp"
                 android:layout_height="@dimen/_50sdp"
                 android:layout_marginTop="@dimen/padding_heavy"
@@ -38,19 +38,19 @@
                 android:layout_height="@dimen/_14sdp"
                 android:src="@drawable/ic_px_edit"
                 android:background="@drawable/background_icon_edit"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_profile_icon"
-                app:layout_constraintEnd_toEndOf="@+id/vprof_editor_profile_icon"/>
+                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_instance_icon"
+                app:layout_constraintEnd_toEndOf="@+id/vprof_editor_instance_icon"/>
 
             <TextView
                 android:id="@+id/vprof_editor_profile_name_sub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/profiles_profile_name"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_profile_name"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_profile_name" />
+                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_instance_name"
+                app:layout_constraintStart_toStartOf="@+id/vprof_editor_instance_name" />
 
             <EditText
-                android:id="@+id/vprof_editor_profile_name"
+                android:id="@+id/vprof_editor_instance_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_large"
@@ -61,7 +61,7 @@
                 android:hint="@string/unnamed"
                 android:inputType="textPersonName"
                 android:paddingHorizontal="@dimen/padding_heavy"
-                app:layout_constraintTop_toBottomOf="@id/vprof_editor_profile_icon" />
+                app:layout_constraintTop_toBottomOf="@id/vprof_editor_instance_icon" />
 
 
             <TextView
@@ -85,7 +85,7 @@
 
                 app:layout_constraintEnd_toStartOf="@+id/vprof_editor_version_button"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_profile_name" />
+                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_instance_name" />
 
             <Button
                 android:id="@+id/vprof_editor_version_button"
@@ -196,11 +196,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/pedit_renderer"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_profile_renderer"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_profile_renderer" />
+                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_instance_renderer"
+                app:layout_constraintStart_toStartOf="@+id/vprof_editor_instance_renderer" />
 
             <Spinner
-                android:id="@+id/vprof_editor_profile_renderer"
+                android:id="@+id/vprof_editor_instance_renderer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
@@ -219,9 +219,9 @@
                 android:rotation="180"
                 android:src="@drawable/spinner_arrow"
 
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_profile_renderer"
-                app:layout_constraintEnd_toEndOf="@id/vprof_editor_profile_renderer"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_profile_renderer" />
+                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_instance_renderer"
+                app:layout_constraintEnd_toEndOf="@id/vprof_editor_instance_renderer"
+                app:layout_constraintTop_toTopOf="@id/vprof_editor_instance_renderer" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>
