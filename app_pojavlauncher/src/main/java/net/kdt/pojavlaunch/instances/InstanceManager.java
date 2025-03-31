@@ -35,10 +35,9 @@ public class InstanceManager {
     }
 
     private static File selectedInstanceLocation() {
-        String locationString = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_INSTANCE, "");
-        File instanceRoot = new File(locationString);
-        File instancesDir = instanceRoot.getParentFile();
-        if(!sInstancePath.equals(instancesDir)) return null;
+        String directoryName = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_INSTANCE, "");
+        File instanceRoot = new File(sInstancePath, directoryName);
+        if(!metadataLocation(instanceRoot).exists()) return null;
         return instanceRoot;
     }
 
@@ -129,7 +128,7 @@ public class InstanceManager {
         LauncherPreferences.DEFAULT_PREF.edit()
                 .putString(
                         LauncherPreferences.PREF_KEY_CURRENT_INSTANCE,
-                        instance.mInstanceRoot.getAbsolutePath()
+                        instance.mInstanceRoot.getName()
                 ).apply();
         sSelectedInstance = instance;
     }
