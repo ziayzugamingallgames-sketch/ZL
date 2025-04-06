@@ -50,10 +50,22 @@ public class ModpackInstaller {
             // Install the modpack
             modLoaderInfo = installFunction.installModpack(modpackFile, instance.getInstanceRoot());
 
-            instance.versionId = modLoaderInfo.getVersionId();
-            instance.write();
+            if(modLoaderInfo == null) throw new IOException("Unknown modpack mod loader information");
 
+            if(modLoaderInfo.requiresGuiInstallation()) {
+                instance.installer = modLoaderInfo.createInstaller();
+            } else {
+                String versionId = modLoaderInfo.installHeadlessly();
+                if(versionId == null) throw new IOException("Unknown mod loader version");
+                instance.versionId = versionId;
+            }
+            instance.write();
             ModIconCache.writeInstanceImage(instance, modDetail.getIconCacheTag());
+
+            InstanceManager.setSelectedInstance(instance);
+            if(modLoaderInfo.requiresGuiInstallation()) {
+                instance.installer.start();
+            }
         } catch (IOException e) {
             InstanceManager.removeInstance(instance);
             throw e;

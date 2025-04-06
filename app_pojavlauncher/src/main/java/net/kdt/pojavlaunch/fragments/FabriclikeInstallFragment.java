@@ -22,7 +22,6 @@ import net.kdt.pojavlaunch.PojavApplication;
 import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.extra.ExtraCore;
-import net.kdt.pojavlaunch.modloaders.FabriclikeDownloadTask;
 import net.kdt.pojavlaunch.modloaders.FabriclikeUtils;
 import net.kdt.pojavlaunch.modloaders.FabricVersion;
 import net.kdt.pojavlaunch.modloaders.ModloaderDownloadListener;
@@ -101,12 +100,9 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
             return;
         }
         ModloaderListenerProxy proxy = new ModloaderListenerProxy();
-        FabriclikeDownloadTask fabricDownloadTask = new FabriclikeDownloadTask(proxy, mFabriclikeUtils,
-                mSelectedGameVersion, mSelectedLoaderVersion, true);
         proxy.attachListener(this);
         setListenerProxy(proxy);
         mStartButton.setEnabled(false);
-        new Thread(fabricDownloadTask).start();
     }
 
     private void onClickRetry(View v) {

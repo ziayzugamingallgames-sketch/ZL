@@ -6,10 +6,10 @@ import android.util.Log;
 
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.utils.JSONUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 
 public class Instance {
@@ -24,6 +24,7 @@ public class Instance {
     protected transient File mInstanceRoot;
     public String name;
     public String versionId;
+    public InstanceInstaller installer;
     public String renderer;
     public String jvmArgs;
     public int argsMode;
@@ -57,10 +58,7 @@ public class Instance {
      * @throws IOException in case of write errors
      */
     public void write() throws IOException {
-        File instanceMetadataLocation = InstanceManager.metadataLocation(mInstanceRoot);
-        try(FileWriter fileWriter = new FileWriter(instanceMetadataLocation)) {
-            Tools.GLOBAL_GSON.toJson(this, fileWriter);
-        }
+        JSONUtils.writeToFile(InstanceManager.metadataLocation(mInstanceRoot), this);
     }
 
     /**

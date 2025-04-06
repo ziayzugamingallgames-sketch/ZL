@@ -3,11 +3,10 @@ package net.kdt.pojavlaunch.instances;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.utils.FileUtils;
+import net.kdt.pojavlaunch.utils.JSONUtils;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,9 +19,8 @@ public class InstanceManager {
     private static ArrayList<Instance> sInstanceList;
 
     private static Instance read(File instanceRoot) {
-        File metadata = metadataLocation(instanceRoot);
-        try(Reader reader = new FileReader(metadata)) {
-            Instance instance = Tools.GLOBAL_GSON.fromJson(reader, Instance.class);
+        try {
+            Instance instance = JSONUtils.readFromFile(metadataLocation(instanceRoot), Instance.class);
             instance.mInstanceRoot = instanceRoot;
             return instance;
         }catch (IOException e) {

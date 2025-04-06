@@ -33,11 +33,11 @@ import net.kdt.pojavlaunch.fragments.MainMenuFragment;
 import net.kdt.pojavlaunch.fragments.MicrosoftLoginFragment;
 import net.kdt.pojavlaunch.fragments.SelectAuthFragment;
 import net.kdt.pojavlaunch.instances.Instance;
+import net.kdt.pojavlaunch.instances.InstanceInstaller;
 import net.kdt.pojavlaunch.instances.InstanceManager;
 import net.kdt.pojavlaunch.instances.profcompat.ProfileWatcher;
 import net.kdt.pojavlaunch.lifecycle.ContextAwareDoneListener;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutor;
-import net.kdt.pojavlaunch.modloaders.modpacks.ModloaderInstallTracker;
 import net.kdt.pojavlaunch.modloaders.modpacks.imagecache.IconCacheJanitor;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.prefs.screens.LauncherPreferenceFragment;
@@ -67,7 +67,6 @@ public class LauncherActivity extends BaseActivity {
     private ImageButton mSettingsButton;
     private ProgressLayout mProgressLayout;
     private ProgressServiceKeeper mProgressServiceKeeper;
-    private ModloaderInstallTracker mInstallTracker;
     private NotificationManager mNotificationManager;
 
     /* Allows to switch from one button "type" to another */
@@ -113,6 +112,11 @@ public class LauncherActivity extends BaseActivity {
         }
 
         Instance selectedInstance = InstanceManager.getSelectedListedInstance();
+
+        if(selectedInstance.installer != null) {
+            selectedInstance.installer.start();
+            return false;
+        }
 
         if (!Tools.isValidString(selectedInstance.versionId)){
             Toast.makeText(this, R.string.error_no_version, Toast.LENGTH_LONG).show();
@@ -207,27 +211,25 @@ public class LauncherActivity extends BaseActivity {
 
         new AsyncVersionList().getVersionList(versions -> ExtraCore.setValue(ExtraConstants.RELEASE_TABLE, versions), false);
 
-        mInstallTracker = new ModloaderInstallTracker(this);
-
         mProgressLayout.observe(ProgressLayout.DOWNLOAD_MINECRAFT);
         mProgressLayout.observe(ProgressLayout.UNPACK_RUNTIME);
         mProgressLayout.observe(ProgressLayout.INSTALL_MODPACK);
         mProgressLayout.observe(ProgressLayout.AUTHENTICATE_MICROSOFT);
         mProgressLayout.observe(ProgressLayout.DOWNLOAD_VERSION_LIST);
+        mProgressLayout.observe(ProgressLayout.INSTANCE_INSTALL);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         ContextExecutor.setActivity(this);
-        mInstallTracker.attach();
+        InstanceInstaller.postInstallCheck(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         ContextExecutor.clearActivity();
-        mInstallTracker.detach();
     }
 
     @Override
