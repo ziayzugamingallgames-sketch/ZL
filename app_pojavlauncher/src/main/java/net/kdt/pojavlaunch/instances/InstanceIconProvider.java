@@ -26,6 +26,7 @@ public class InstanceIconProvider {
         sStaticIcons.put("default", R.drawable.ic_mojo_full);
         sStaticIcons.put("fabric", R.drawable.ic_fabric);
         sStaticIcons.put("quilt", R.drawable.ic_quilt);
+        sStaticIcons.put("forge", R.drawable.ic_forge);
     }
 
     /**

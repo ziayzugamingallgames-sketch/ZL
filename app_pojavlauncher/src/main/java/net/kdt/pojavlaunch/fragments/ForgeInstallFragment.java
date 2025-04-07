@@ -6,7 +6,12 @@ import android.widget.ExpandableListAdapter;
 
 import androidx.annotation.NonNull;
 
+import com.kdt.mcgui.ProgressLayout;
+
 import git.artdeell.mojo.R;
+
+import net.kdt.pojavlaunch.instances.InstanceInstaller;
+import net.kdt.pojavlaunch.instances.InstanceManager;
 import net.kdt.pojavlaunch.modloaders.ForgeUtils;
 import net.kdt.pojavlaunch.modloaders.ForgeVersionListAdapter;
 import net.kdt.pojavlaunch.modloaders.ModloaderListenerProxy;
@@ -48,7 +53,24 @@ public class ForgeInstallFragment extends ModVersionListFragment<List<String>> {
 
     @Override
     public Runnable createDownloadTask(Object selectedVersion, ModloaderListenerProxy listenerProxy) {
-        return null;
+        return ()->createInstance((String) selectedVersion, listenerProxy);
+    }
+
+    private static void createInstance(String selectedVersion, ModloaderListenerProxy listenerProxy) {
+        try {
+            ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0);
+            InstanceInstaller instanceInstaller = ForgeUtils.createInstaller(selectedVersion);
+            InstanceManager.createInstance(instance -> {
+                instance.name = "Forge";
+                instance.icon = "forge";
+                instance.installer = instanceInstaller;
+            }, selectedVersion);
+            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
+            instanceInstaller.start();
+            listenerProxy.onDownloadFinished(null);
+        }catch (IOException e) {
+            listenerProxy.onDownloadError(e);
+        }
     }
 
     @Override

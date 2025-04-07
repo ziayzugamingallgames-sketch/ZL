@@ -3,7 +3,6 @@ package net.kdt.pojavlaunch.instances;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.kdt.mcgui.ProgressLayout;
 
@@ -66,6 +65,7 @@ public class InstanceInstaller implements ContextExecutorTask {
         lastInstaller.installerJar().delete();
         if(!sLastInstallInfo.delete()) throw new IOException("Failed to delete mod installer info");
         String targetVersionId = ProfileWatcher.consumePendingVersion();
+        if(targetVersionId == null) return;
         for(Instance instance : InstanceManager.getImmutableInstanceList()) {
             if(!lastInstaller.equals(instance.installer)) continue;
             instance.installer = null;
@@ -108,6 +108,7 @@ public class InstanceInstaller implements ContextExecutorTask {
     @Override
     public void executeWithActivity(Activity activity) {
         try {
+            Tools.copyAssetFile(activity, "launcher_profiles.json", Tools.DIR_GAME_NEW, true);
             writeLastInstaller();
         }catch (Exception e) {
             Tools.showError(activity, e);
