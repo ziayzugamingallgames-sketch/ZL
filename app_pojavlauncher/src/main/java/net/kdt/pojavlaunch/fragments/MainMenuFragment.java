@@ -78,7 +78,6 @@ public class MainMenuFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mVersionSpinner.reloadProfiles();
     }
 
     private void runInstallerWithConfirmation(boolean isCustomArgs) {

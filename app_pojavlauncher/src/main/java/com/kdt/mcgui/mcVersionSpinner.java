@@ -22,6 +22,9 @@ import androidx.fragment.app.FragmentActivity;
 
 import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.extra.ExtraConstants;
+import net.kdt.pojavlaunch.extra.ExtraCore;
+import net.kdt.pojavlaunch.extra.ExtraListener;
 import net.kdt.pojavlaunch.fragments.InstanceEditorFragment;
 import net.kdt.pojavlaunch.fragments.ProfileTypeSelectFragment;
 import net.kdt.pojavlaunch.instances.Instance;
@@ -87,6 +90,9 @@ public class mcVersionSpinner extends ExtendedTextView {
     /** Reload profiles from the file, forcing the spinner to consider the new data */
     public void reloadProfiles(){
         mProfileAdapter.reloadProfiles();
+        int selectionIndex = mProfileAdapter.resolveInstanceIndex(InstanceManager.getSelectedListedInstance());
+        if(selectionIndex >= 0) setSelection(selectionIndex);
+        else setProfileSelection(0); // Store new selection on selection failure
     }
 
     /** Initialize various behaviors */
@@ -98,10 +104,7 @@ public class mcVersionSpinner extends ExtendedTextView {
         int endPadding = getContext().getResources().getDimensionPixelOffset(R.dimen._5sdp);
         setPaddingRelative(startPadding, 0, endPadding, 0);
         setCompoundDrawablePadding(startPadding);
-
-        int instanceIndex = mProfileAdapter.resolveInstanceIndex(InstanceManager.getSelectedListedInstance());
-
-        setProfileSelection(Math.max(0,instanceIndex));
+        addOnAttachStateChangeListener(new ExtraAttachListener());
 
         // Popup window behavior
         setOnClickListener(new OnClickListener() {
@@ -180,6 +183,26 @@ public class mcVersionSpinner extends ExtendedTextView {
             mPopupWindow.setExitTransition((Transition) mPopupAnimation);
         }else {
             mPopupWindow.dismiss();
+        }
+    }
+
+    class ExtraAttachListener implements OnAttachStateChangeListener, ExtraListener<Void> {
+        @Override
+        public void onViewAttachedToWindow(@NonNull View view) {
+            reloadProfiles();
+            ExtraCore.addExtraListener(ExtraConstants.REFRESH_VERSION_SPINNER, this);
+        }
+
+        @Override
+        public void onViewDetachedFromWindow(@NonNull View view) {
+            ExtraCore.removeExtraListenerFromValue(ExtraConstants.REFRESH_VERSION_SPINNER, this);
+        }
+
+        @Override
+        public boolean onValueSet(String key, @NonNull Void value) {
+            post(mcVersionSpinner.this::reloadProfiles);
+            ExtraCore.consumeValue(key);
+            return false;
         }
     }
 }

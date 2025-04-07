@@ -10,6 +10,8 @@ import net.kdt.pojavlaunch.JavaGUILauncherActivity;
 import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.extra.ExtraConstants;
+import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.instances.profcompat.ProfileWatcher;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutor;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutorTask;
@@ -72,6 +74,7 @@ public class InstanceInstaller implements ContextExecutorTask {
             instance.versionId = targetVersionId;
             instance.write();
         }
+        ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, null);
     }
 
     public static void postInstallCheck(Context context) {
