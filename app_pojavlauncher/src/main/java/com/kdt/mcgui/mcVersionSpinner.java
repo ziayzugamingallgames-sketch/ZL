@@ -61,7 +61,7 @@ public class mcVersionSpinner extends ExtendedTextView {
 
     private final InstanceAdapter mProfileAdapter = new InstanceAdapter(new InstanceAdapterExtra[]{
             new InstanceAdapterExtra(VERSION_SPINNER_PROFILE_CREATE,
-                    R.string.create_profile,
+                    R.string.create_instance,
                     ResourcesCompat.getDrawable(getResources(), R.drawable.ic_add, null)),
     });
 
