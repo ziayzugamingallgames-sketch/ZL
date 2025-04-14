@@ -1,13 +1,13 @@
-package net.kdt.pojavlaunch.profiles;
+package net.kdt.pojavlaunch.instances;
 
 import android.graphics.drawable.Drawable;
 
-public class ProfileAdapterExtra {
+public class InstanceAdapterExtra {
     public final int id;
     public final int name;
     public final Drawable icon;
 
-    public ProfileAdapterExtra(int id, int name, Drawable icon) {
+    public InstanceAdapterExtra(int id, int name, Drawable icon) {
         this.id = id;
         this.name = name;
         this.icon = icon;

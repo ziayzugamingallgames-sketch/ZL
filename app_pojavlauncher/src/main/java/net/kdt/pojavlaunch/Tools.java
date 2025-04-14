@@ -49,6 +49,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import net.kdt.pojavlaunch.instances.Instance;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutor;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutorTask;
 import net.kdt.pojavlaunch.lifecycle.LifecycleAwareAlertDialog;
@@ -69,8 +70,6 @@ import net.kdt.pojavlaunch.utils.OldVersionsUtils;
 import net.kdt.pojavlaunch.value.DependentLibrary;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.value.MinecraftLibraryArtifact;
-import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
-import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
@@ -115,7 +114,6 @@ public final class Tools {
     public static String MULTIRT_HOME;
     public static String LOCAL_RENDERER = null;
     public static int DEVICE_ARCHITECTURE;
-    public static final String LAUNCHERPROFILES_RTPREFIX = "pojav://";
 
     // New since 3.3.1
     public static String DIR_ACCOUNT_NEW;
@@ -260,7 +258,7 @@ public final class Tools {
     }
 
     public static void launchMinecraft(final AppCompatActivity activity, MinecraftAccount minecraftAccount,
-                                       MinecraftProfile minecraftProfile, String versionId, int versionJavaRequirement) throws Throwable {
+                                       Instance instance, String versionId, int versionJavaRequirement) throws Throwable {
         int freeDeviceMemory = getFreeDeviceMemory(activity);
         int localeString;
         int freeAddressSpace = Architecture.is32BitsDevice() ? getMaxContinuousAddressSpaceSize() : -1;
@@ -284,8 +282,7 @@ public final class Tools {
                 // to start after the activity is shown again
             }
         }
-        LauncherProfiles.load();
-        File gamedir = Tools.getGameDirPath(minecraftProfile);
+        File gamedir = instance.getInstanceRoot();
         if(checkRenderDistance(gamedir)) {
             LifecycleAwareAlertDialog.DialogCreator dialogCreator = ((alertDialog, dialogBuilder) ->
                     dialogBuilder.setMessage(activity.getString(R.string.ltw_render_distance_warning_msg))
@@ -303,7 +300,7 @@ public final class Tools {
         }
 
 
-        Runtime runtime = MultiRTUtils.forceReread(Tools.pickRuntime(minecraftProfile, versionJavaRequirement));
+        Runtime runtime = MultiRTUtils.forceReread(Tools.pickRuntime(instance, versionJavaRequirement));
         JMinecraftVersionList.Version versionInfo = Tools.getVersionInfo(versionId);
 
 
@@ -343,22 +340,11 @@ public final class Tools {
         javaArgList.add(versionInfo.mainClass);
         javaArgList.addAll(Arrays.asList(launchArgs));
         // ctx.appendlnToLog("full args: "+javaArgList.toString());
-        String args = LauncherPreferences.PREF_CUSTOM_JAVA_ARGS;
-        if(Tools.isValidString(minecraftProfile.javaArgs)) args = minecraftProfile.javaArgs;
+        String args = instance.getLaunchArgs();
         FFmpegPlugin.discover(activity);
         JREUtils.launchJavaVM(activity, runtime, gamedir, javaArgList, args);
         // If we returned, this means that the JVM exit dialog has been shown and we don't need to be active anymore.
         // We never return otherwise. The process will be killed anyway, and thus we will become inactive
-    }
-
-    public static File getGameDirPath(@NonNull MinecraftProfile minecraftProfile){
-        if(minecraftProfile.gameDir != null){
-            if(minecraftProfile.gameDir.startsWith(Tools.LAUNCHERPROFILES_RTPREFIX))
-                return new File(minecraftProfile.gameDir.replace(Tools.LAUNCHERPROFILES_RTPREFIX,Tools.DIR_GAME_HOME+"/"));
-            else
-                return new File(Tools.DIR_GAME_HOME,minecraftProfile.gameDir);
-        }
-        return new File(Tools.DIR_GAME_NEW);
     }
 
     public static void buildNotificationChannel(Context context){
@@ -1226,15 +1212,14 @@ public final class Tools {
         return string != null && !string.isEmpty();
     }
 
-    public static String getRuntimeName(String prefixedName) {
-        if(prefixedName == null) return prefixedName;
-        if(!prefixedName.startsWith(Tools.LAUNCHERPROFILES_RTPREFIX)) return null;
-        return prefixedName.substring(Tools.LAUNCHERPROFILES_RTPREFIX.length());
+    public static String validOrNullString(String string) {
+        if(!isValidString(string)) return null;
+        return string;
     }
 
-    public static String getSelectedRuntime(MinecraftProfile minecraftProfile) {
+    public static String getSelectedRuntime(Instance instance) {
         String runtime = LauncherPreferences.PREF_DEFAULT_RUNTIME;
-        String profileRuntime = getRuntimeName(minecraftProfile.javaDir);
+        String profileRuntime = instance.selectedRuntime;
         if(profileRuntime != null) {
             if(MultiRTUtils.forceReread(profileRuntime).versionString != null) {
                 runtime = profileRuntime;
@@ -1247,14 +1232,17 @@ public final class Tools {
         MAIN_HANDLER.post(runnable);
     }
 
-    public static @NonNull String pickRuntime(MinecraftProfile minecraftProfile, int targetJavaVersion) {
-        String runtime = getSelectedRuntime(minecraftProfile);
-        String profileRuntime = getRuntimeName(minecraftProfile.javaDir);
+    public static @NonNull String pickRuntime(Instance instance, int targetJavaVersion) {
+        String runtime = getSelectedRuntime(instance);
+        String profileRuntime = instance.selectedRuntime;
         Runtime pickedRuntime = MultiRTUtils.read(runtime);
         if(runtime == null || pickedRuntime.javaVersion == 0 || pickedRuntime.javaVersion < targetJavaVersion) {
             String preferredRuntime = MultiRTUtils.getNearestJreName(targetJavaVersion);
             if(preferredRuntime == null) throw new RuntimeException("Failed to autopick runtime!");
-            if(profileRuntime != null) minecraftProfile.javaDir = Tools.LAUNCHERPROFILES_RTPREFIX+preferredRuntime;
+            if(profileRuntime != null) {
+                instance.selectedRuntime = preferredRuntime;
+                instance.maybeWrite();
+            }
             runtime = preferredRuntime;
         }
         return runtime;
