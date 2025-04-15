@@ -7,6 +7,7 @@ import static net.kdt.pojavlaunch.Tools.currentDisplayMetrics;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.View;
@@ -21,6 +22,7 @@ import android.widget.TextView;
 
 import com.kdt.SideDialogView;
 
+import net.kdt.pojavlaunch.CustomControlsActivity;
 import net.kdt.pojavlaunch.EfficientAndroidLWJGLKeycode;
 import git.artdeell.mojo.R;
 import net.kdt.pojavlaunch.Tools;
@@ -28,8 +30,10 @@ import net.kdt.pojavlaunch.colorselector.ColorSelector;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
 import net.kdt.pojavlaunch.customcontrols.ControlDrawerData;
 import net.kdt.pojavlaunch.customcontrols.ControlJoystickData;
+import net.kdt.pojavlaunch.customcontrols.LayoutBitmaps;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlDrawer;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface;
+import net.kdt.pojavlaunch.utils.CropperUtils;
 import net.kdt.pojavlaunch.utils.interfaces.SimpleItemSelectedListener;
 import net.kdt.pojavlaunch.utils.interfaces.SimpleSeekBarListener;
 import net.kdt.pojavlaunch.utils.interfaces.SimpleTextWatcher;
@@ -66,7 +70,7 @@ public class EditControlSideDialog extends SideDialogView {
     private final TextView[] mKeycodeTextviews = new TextView[4];
     private SeekBar mStrokeWidthSeekbar, mCornerRadiusSeekbar, mAlphaSeekbar;
     private TextView mStrokePercentTextView, mCornerRadiusPercentTextView, mAlphaPercentTextView;
-    private TextView mSelectBackgroundColor, mSelectStrokeColor;
+    private TextView mSelectBackgroundBitmap, mSelectBackgroundColor, mSelectStrokeColor;
     private ArrayAdapter<String> mAdapter;
     private List<String> mSpecialArray;
     private CheckBox mDisplayInGameCheckbox, mDisplayInMenuCheckbox;
@@ -238,6 +242,8 @@ public class EditControlSideDialog extends SideDialogView {
 
         mAbsoluteTrackingSwitch.setVisibility(VISIBLE);
         mAbsoluteTrackingSwitch.setChecked(data.absolute);
+
+        mSelectBackgroundBitmap.setVisibility(GONE);
     }
 
     /**
@@ -311,6 +317,7 @@ public class EditControlSideDialog extends SideDialogView {
         mStrokeWidthSeekbar = mDialogContent.findViewById(R.id.editStrokeWidth_seekbar);
         mCornerRadiusSeekbar = mDialogContent.findViewById(R.id.editCornerRadius_seekbar);
         mAlphaSeekbar = mDialogContent.findViewById(R.id.editButtonOpacity_seekbar);
+        mSelectBackgroundBitmap = mDialogContent.findViewById(R.id.setBackgroundBitmap_textView);
         mSelectBackgroundColor = mDialogContent.findViewById(R.id.editBackgroundColor_textView);
         mSelectStrokeColor = mDialogContent.findViewById(R.id.editStrokeColor_textView);
         mStrokePercentTextView = mDialogContent.findViewById(R.id.editStrokeWidth_textView_percent);
@@ -327,6 +334,13 @@ public class EditControlSideDialog extends SideDialogView {
         mVisibilityTextView = mDialogContent.findViewById(R.id.visibility_textview);
         mSizeTextview = mDialogContent.findViewById(R.id.editSize_textView);
         mSizeXTextView = mDialogContent.findViewById(R.id.editSize_x_textView);
+    }
+
+    private void removeBitmap(ControlInterface button) {
+        LayoutBitmaps storage = button.getControlLayoutParent().getBitmaps();
+        ControlData properties = button.getProperties();
+        storage.putBitmap(null, properties.bitmapTag);
+        properties.bitmapTag = null;
     }
 
     /**
@@ -459,15 +473,50 @@ public class EditControlSideDialog extends SideDialogView {
         mSelectStrokeColor.setOnClickListener(v -> {
             mColorSelector.setAlphaEnabled(false);
             mColorSelector.setColorSelectionListener(color -> {
+                removeBitmap(mCurrentlyEditedButton);
                 mCurrentlyEditedButton.getProperties().strokeColor = color;
                 mCurrentlyEditedButton.setBackground();
             });
             appearColor(isAtRight(), mCurrentlyEditedButton.getProperties().strokeColor);
         });
 
+        mSelectBackgroundBitmap.setOnClickListener(v ->  {
+            final View mTargetView = mCurrentlyEditedButton.getControlView();
+            CropperUtils.CropperReceiver receiver = new CropperUtils.CropperReceiver() {
+                @Override
+                public float getAspectRatio() {
+                    return (float) mTargetView.getWidth() / mTargetView.getHeight();
+                }
+
+                @Override
+                public int getTargetMaxSide() {
+                    return Math.max(mTargetView.getWidth(), mTargetView.getHeight());
+                }
+
+                @Override
+                public void onCropped(Bitmap contentBitmap) {
+                    ControlData buttonProperties = mCurrentlyEditedButton.getProperties();
+                    LayoutBitmaps storage = mCurrentlyEditedButton.getControlLayoutParent().getBitmaps();
+                    String oldTag = buttonProperties.bitmapTag;
+                    buttonProperties.bitmapTag = storage.putBitmap(contentBitmap, oldTag);
+                    mCurrentlyEditedButton.setBackground();
+                }
+
+                @Override
+                public void onFailed(Exception exception) {
+                    Tools.showError(mTargetView.getContext(), exception);
+                }
+            };
+            Context context = mTargetView.getContext();
+            if(context instanceof CustomControlsActivity) {
+                ((CustomControlsActivity)context).startCropping(receiver);
+            }
+        });
+
         mSelectBackgroundColor.setOnClickListener(v -> {
             mColorSelector.setAlphaEnabled(true);
             mColorSelector.setColorSelectionListener(color -> {
+                removeBitmap(mCurrentlyEditedButton);
                 mCurrentlyEditedButton.getProperties().bgColor = color;
                 mCurrentlyEditedButton.setBackground();
             });
