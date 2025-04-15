@@ -80,6 +80,14 @@ public class CropperView extends View {
             if(mLastDistance != -1) {
                 float distanceDelta = distance - mLastDistance;
                 float multiplier = 0.005f;
+                if(horizontalLock) {
+                    x1 = mSelectionRect.left;
+                    x2 = mSelectionRect.right;
+                }
+                if(verticalLock) {
+                    y1 = mSelectionRect.top;
+                    y2 = mSelectionRect.bottom;
+                }
                 float midpointX = (x1 + x2) / 2;
                 float midpointY = (y1 + y2) / 2;
                 mCropperBehaviour.zoom(1 + distanceDelta * multiplier, midpointX, midpointY);
