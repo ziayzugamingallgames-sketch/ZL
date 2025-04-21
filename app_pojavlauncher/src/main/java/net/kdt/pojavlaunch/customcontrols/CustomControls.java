@@ -82,9 +82,12 @@ public class CustomControls {
 	public void save(String path) throws IOException {
 		//Current version is the V3.2 so the version as to be marked as 8 !
 		version = 8;
+		String jsonControls = Tools.GLOBAL_GSON.toJson(this);
 		try(FileOutputStream fileOutputStream = new FileOutputStream(path)) {
-			writeJson(fileOutputStream);
-			mLayoutBitmaps.store(fileOutputStream);
+			LayoutBitmaps.store(fileOutputStream, new LayoutBitmaps.ControlsContainer(
+					jsonControls,
+					mLayoutBitmaps
+			));
 		}
 	}
 }

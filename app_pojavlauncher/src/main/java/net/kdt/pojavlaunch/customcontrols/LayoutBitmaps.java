@@ -3,15 +3,15 @@ package net.kdt.pojavlaunch.customcontrols;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import java.io.ByteArrayOutputStream;
+import org.apache.commons.io.IOUtils;
+
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.zip.ZipEntry;
@@ -25,15 +25,6 @@ public class LayoutBitmaps {
 
     private LayoutBitmaps() {
         mBitmaps = new HashMap<>();
-    }
-
-    private LayoutBitmaps(ZipInputStream zipIn) throws IOException {
-        this();
-        for(ZipEntry entry = zipIn.getNextEntry(); entry != null; entry = zipIn.getNextEntry()) {
-            if(entry.isDirectory()) continue;
-            mBitmaps.put(entry.getName(), BitmapFactory.decodeStream(zipIn));
-            zipIn.closeEntry();
-        }
     }
 
     private String pickKey() {
@@ -55,10 +46,55 @@ public class LayoutBitmaps {
         return newKey;
     }
 
-    public void store(OutputStream outputStream) throws IOException {
-        if(mBitmaps.isEmpty()) return;
-        try(ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
-            for(Map.Entry<String, Bitmap> bitmapEntry : mBitmaps.entrySet()) {
+    private static ControlsContainer createEmpty(String controlsJson) {
+        return new ControlsContainer(controlsJson, new LayoutBitmaps());
+    }
+
+    private static ControlsContainer loadFromZip(ZipInputStream zipIn) throws IOException {
+        LayoutBitmaps layoutBitmaps = new LayoutBitmaps();
+        String layoutContent = null;
+        for(ZipEntry entry = zipIn.getNextEntry(); entry != null; entry = zipIn.getNextEntry()) {
+            if(entry.isDirectory()) continue;
+            String entryName = entry.getName();
+            if(entryName.equals("layout.json")) {
+                layoutContent = IOUtils.toString(zipIn, StandardCharsets.UTF_8);
+                continue;
+            }
+            layoutBitmaps.mBitmaps.put(entryName, BitmapFactory.decodeStream(zipIn));
+            zipIn.closeEntry();
+        }
+        if(layoutContent == null) throw new ZipException("Incorrect ZIP file structure");
+        return new ControlsContainer(layoutContent, layoutBitmaps);
+    }
+
+    private static ControlsContainer load(FileInputStream fileInputStream) throws IOException{
+        try(BufferedInputStream bufferedIn = new BufferedInputStream(fileInputStream)) {
+            boolean isZip;
+            bufferedIn.mark(4096);
+            try {
+                ZipInputStream zipIn = new ZipInputStream(bufferedIn);
+                isZip = zipIn.getNextEntry() != null;
+            } catch (ZipException e) {
+                isZip = false;
+            }
+            bufferedIn.reset();
+            if(isZip) {
+                try(ZipInputStream zipIn = new ZipInputStream(bufferedIn)) {
+                    return loadFromZip(zipIn);
+                }
+            } else {
+                return createEmpty(IOUtils.toString(bufferedIn, StandardCharsets.UTF_8));
+            }
+        }
+    }
+
+    private static void storeZip(FileOutputStream fileOutputStream, ControlsContainer controlsContainer) throws IOException {
+        LayoutBitmaps bitmaps = controlsContainer.mLayoutZip;
+        try(ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
+            zipOutputStream.putNextEntry(new ZipEntry("layout.json"));
+            IOUtils.write(controlsContainer.mControlsJson, zipOutputStream, StandardCharsets.UTF_8);
+            zipOutputStream.closeEntry();
+            for(Map.Entry<String, Bitmap> bitmapEntry : bitmaps.mBitmaps.entrySet()) {
                 Bitmap outBitmap = bitmapEntry.getValue();
                 if(outBitmap == null) continue;
                 zipOutputStream.putNextEntry(new ZipEntry(bitmapEntry.getKey()));
@@ -68,42 +104,18 @@ public class LayoutBitmaps {
         }
     }
 
-    private static ControlsContainer createEmpty(String controlsJson) {
-        return new ControlsContainer(controlsJson, new LayoutBitmaps());
-    }
-
-    private static boolean copyJsonOnly(InputStream input, OutputStream output) throws IOException {
-        int bracketCounter = 0;
-        boolean trigger = false;
-        for(int chr = input.read(); chr != -1; chr = input.read()) {
-            if(chr == '{') {
-                trigger = true;
-                bracketCounter++;
-            }
-            if(chr == '}') bracketCounter--;
-            output.write(chr);
-            if(bracketCounter == 0 && trigger) return true;
+    public static void store(FileOutputStream fileOutputStream, ControlsContainer controlsContainer) throws IOException {
+        LayoutBitmaps bitmaps = controlsContainer.mLayoutZip;
+        String controlsContent = controlsContainer.mControlsJson;
+        if(bitmaps.mBitmaps.isEmpty()) {
+            IOUtils.write(controlsContent, fileOutputStream, StandardCharsets.UTF_8);
+            return;
         }
-        return false;
-    }
-
-    private static ControlsContainer load(FileInputStream fileInputStream) throws IOException{
-        String controlsString;
-        try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            boolean isValid = copyJsonOnly(fileInputStream, byteArrayOutputStream);
-            if(!isValid) return null;
-            controlsString = byteArrayOutputStream.toString("UTF-8");
-        }
-        if(fileInputStream.available() == 0) return createEmpty(controlsString);
-        try(ZipInputStream zipInputStream = new ZipInputStream(fileInputStream)) {
-            return new ControlsContainer(controlsString, new LayoutBitmaps(zipInputStream));
-        }catch (ZipException e) {
-            return createEmpty(controlsString);
-        }
+        storeZip(fileOutputStream, controlsContainer);
     }
 
     public static ControlsContainer load(File jsonLocation) throws IOException {
-        try (FileInputStream fileInputStream = new FileInputStream(jsonLocation);) {
+        try (FileInputStream fileInputStream = new FileInputStream(jsonLocation)) {
             return load(fileInputStream);
         }
     }
