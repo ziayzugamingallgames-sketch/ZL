@@ -138,6 +138,7 @@
 
     <string name="customctrl_mapping">Mapping</string>
     <string name="customctrl_orientation">Orientation</string>
+    <string name="customctrl_background_bitmap">Background image</string>
     <string name="customctrl_background_color">Background color</string>
     <string name="customctrl_corner_radius">Corner radius</string>
     <string name="customctrl_stroke_width">Stroke width</string>
