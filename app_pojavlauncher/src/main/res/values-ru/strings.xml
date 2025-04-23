@@ -117,7 +117,9 @@
     <string name="customctrl_size">Размер</string>
     <string name="customctrl_mapping">Клавиши</string>
     <string name="customctrl_orientation">Сторона разворота</string>
+    <string name="customctrl_background_bitmap">Фоновое изображение</string>
     <string name="customctrl_background_color">Цвет фона</string>
+    <string name="customctrl_background_color_warning">Изменение цвета фона сбросит фоновое изображение</string>
     <string name="customctrl_corner_radius">Радиус скругления</string>
     <string name="customctrl_stroke_width">Ширина контура</string>
     <string name="customctrl_stroke_color">Цвет контура</string>

@@ -77,7 +77,8 @@ public class EditControlSideDialog extends SideDialogView {
     private ControlInterface mCurrentlyEditedButton;
     // Decorative textviews
     private TextView mOrientationTextView, mMappingTextView, mNameTextView,
-            mCornerRadiusTextView, mVisibilityTextView, mSizeTextview, mSizeXTextView;
+            mCornerRadiusTextView, mVisibilityTextView, mSizeTextview,
+            mSizeXTextView, mStrokeWidthTextView, mColorSelectWarningTextView;
 
     // Color selector related stuff
     private ColorSelector mColorSelector;
@@ -189,6 +190,15 @@ public class EditControlSideDialog extends SideDialogView {
                 mKeycodeSpinners[i].setSelection(EfficientAndroidLWJGLKeycode.getIndexByValue(data.keycodes[i]) + mSpecialArray.size());
             }
         }
+
+        setHasBitmap(Tools.isValidString(data.bitmapTag));
+
+        Context viewContext = mCurrentlyEditedButton.getControlView().getContext();
+
+        // Don't allow editing the bitmap in-game (i don't want to bother with implementing that,
+        // and it has potential to kill the game during icon selection)
+        if(!(viewContext instanceof CustomControlsActivity))
+            mSelectBackgroundBitmap.setVisibility(GONE);
     }
 
     /**
@@ -294,6 +304,24 @@ public class EditControlSideDialog extends SideDialogView {
         for(Spinner s : mKeycodeSpinners) {
             s.setVisibility(View.INVISIBLE);
         }
+        mColorSelectWarningTextView.setVisibility(GONE);
+    }
+
+    private void setHasBitmap(boolean hasBitmap) {
+        int visibility = (!hasBitmap) ? VISIBLE : GONE;
+        int visibilityOpposite = hasBitmap ? VISIBLE : GONE;
+
+        // Disable all settings not available in bitmap background mode
+        mSelectStrokeColor.setVisibility(visibility);
+        mStrokePercentTextView.setVisibility(visibility);
+        mStrokeWidthSeekbar.setVisibility(visibility);
+        mCornerRadiusSeekbar.setVisibility(visibility);
+        mCornerRadiusPercentTextView.setVisibility(visibility);
+        mCornerRadiusTextView.setVisibility(visibility);
+        mStrokeWidthTextView.setVisibility(visibility);
+
+        // Show the warning that will notify the user that color selection will reset the bitmap
+        mColorSelectWarningTextView.setVisibility(visibilityOpposite);
     }
 
     private void bindLayout() {
@@ -334,6 +362,8 @@ public class EditControlSideDialog extends SideDialogView {
         mVisibilityTextView = mDialogContent.findViewById(R.id.visibility_textview);
         mSizeTextview = mDialogContent.findViewById(R.id.editSize_textView);
         mSizeXTextView = mDialogContent.findViewById(R.id.editSize_x_textView);
+        mStrokeWidthTextView = mDialogContent.findViewById(R.id.editStrokeWidth_textView);
+        mColorSelectWarningTextView = mDialogContent.findViewById(R.id.editBackgroundColorWarning_textView);
     }
 
     private void removeBitmap(ControlInterface button) {
@@ -341,6 +371,7 @@ public class EditControlSideDialog extends SideDialogView {
         ControlData properties = button.getProperties();
         storage.putBitmap(null, properties.bitmapTag);
         properties.bitmapTag = null;
+        setHasBitmap(false);
     }
 
     /**
@@ -499,6 +530,7 @@ public class EditControlSideDialog extends SideDialogView {
                     LayoutBitmaps storage = mCurrentlyEditedButton.getControlLayoutParent().getBitmaps();
                     String oldTag = buttonProperties.bitmapTag;
                     buttonProperties.bitmapTag = storage.putBitmap(contentBitmap, oldTag);
+                    setHasBitmap(true);
                     mCurrentlyEditedButton.setBackground();
                 }
 
