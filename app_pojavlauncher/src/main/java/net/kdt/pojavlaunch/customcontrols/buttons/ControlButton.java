@@ -8,6 +8,8 @@ import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -18,6 +20,8 @@ import android.widget.TextView;
 import net.kdt.pojavlaunch.LwjglGlfwKeycode;
 import net.kdt.pojavlaunch.MainActivity;
 import git.artdeell.mojo.R;
+
+import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
 import net.kdt.pojavlaunch.customcontrols.ControlLayout;
 import net.kdt.pojavlaunch.customcontrols.handleview.EditControlSideDialog;
@@ -33,6 +37,7 @@ public class ControlButton extends TextView implements ControlInterface {
 
     /* Cache value from the ControlData radius for drawing purposes */
     private float mComputedRadius;
+    private boolean mHasBitmap;
 
     protected boolean mIsToggled = false;
     protected boolean mIsPointerOutOfBounds = false;
@@ -78,14 +83,27 @@ public class ControlButton extends TextView implements ControlInterface {
             mRectPaint.setAlpha(60);
         }
 
+        mHasBitmap = Tools.isValidString(mProperties.bitmapTag);
+        if(mHasBitmap) {
+            // Use SRC_ATOP transfer mode for bitmap buttons so that the press overlay
+            // only appears over the non-transparent area of the bitmap.
+            mRectPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
+        }
+
         setText(properties.name);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (mIsToggled || (!mProperties.isToggle && isActivated()))
+        boolean drawOverlay = mIsToggled || (!mProperties.isToggle && isActivated());
+        if(!drawOverlay) return;
+        if(mHasBitmap) {
+            canvas.drawRect(0, 0, getWidth(), getHeight(), mRectPaint);
+        }else {
             canvas.drawRoundRect(0, 0, getWidth(), getHeight(), mComputedRadius, mComputedRadius, mRectPaint);
+        }
+
     }
 
 
