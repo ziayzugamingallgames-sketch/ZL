@@ -75,7 +75,7 @@ jobs:
         uses: r0adkll/upload-google-play@v1.1.2
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_JSON }}
-          packageName: net.kdt.pojavlaunch
+          packageName: git.artdeell.mojo
           releaseFiles: out/app-gplay.aab
           track: internal
           inAppUpdatePriority: 5
