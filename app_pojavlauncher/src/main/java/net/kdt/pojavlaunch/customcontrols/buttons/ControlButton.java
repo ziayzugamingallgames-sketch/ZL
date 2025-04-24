@@ -5,11 +5,11 @@ import static org.lwjgl.glfw.CallbackBridge.sendKeyPress;
 import static org.lwjgl.glfw.CallbackBridge.sendMouseButton;
 
 import android.annotation.SuppressLint;
+import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -28,6 +28,9 @@ import net.kdt.pojavlaunch.customcontrols.handleview.EditControlSideDialog;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
 import org.lwjgl.glfw.CallbackBridge;
+
+import static net.kdt.pojavlaunch.customcontrols.buttons.BackgroundTint.DEFAULT_TINT_LIST;
+import static net.kdt.pojavlaunch.customcontrols.buttons.BackgroundTint.TOGGLE_TINT_LIST;
 
 @SuppressLint({"ViewConstructor", "AppCompatCustomView"})
 public class ControlButton extends TextView implements ControlInterface {
@@ -67,9 +70,14 @@ public class ControlButton extends TextView implements ControlInterface {
         return mProperties;
     }
 
-    public void setProperties(ControlData properties, boolean changePos) {
-        mProperties = properties;
-        ControlInterface.super.setProperties(properties, changePos);
+    private void setupBitmapTint() {
+        BackgroundTint.applyToggleTint(getContext());
+        ColorStateList tintStateList = mProperties.isToggle ? TOGGLE_TINT_LIST : DEFAULT_TINT_LIST;
+        setBackgroundTintList(tintStateList);
+        setBackgroundTintMode(PorterDuff.Mode.SRC_ATOP);
+    }
+
+    private void setupNormalTint() {
         mComputedRadius = ControlInterface.super.computeCornerRadius(mProperties.cornerRadius);
 
         if (mProperties.isToggle) {
@@ -82,12 +90,18 @@ public class ControlButton extends TextView implements ControlInterface {
             mRectPaint.setColor(Color.WHITE);
             mRectPaint.setAlpha(60);
         }
+    }
+
+    public void setProperties(ControlData properties, boolean changePos) {
+        mProperties = properties;
+        ControlInterface.super.setProperties(properties, changePos);
 
         mHasBitmap = Tools.isValidString(mProperties.bitmapTag);
         if(mHasBitmap) {
-            // Use SRC_ATOP transfer mode for bitmap buttons so that the press overlay
-            // only appears over the non-transparent area of the bitmap.
-            mRectPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
+            setupBitmapTint();
+        } else {
+            setBackgroundTintList(null);
+            setupNormalTint();
         }
 
         setText(properties.name);
@@ -96,16 +110,16 @@ public class ControlButton extends TextView implements ControlInterface {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        boolean drawOverlay = mIsToggled || (!mProperties.isToggle && isActivated());
-        if(!drawOverlay) return;
-        if(mHasBitmap) {
-            canvas.drawRect(0, 0, getWidth(), getHeight(), mRectPaint);
-        }else {
-            canvas.drawRoundRect(0, 0, getWidth(), getHeight(), mComputedRadius, mComputedRadius, mRectPaint);
-        }
-
+        // Bitmap uses a tint list, so don't do any custom rendering
+        if(mHasBitmap || !isActivated()) return;
+        canvas.drawRoundRect(0, 0, getWidth(), getHeight(), mComputedRadius, mComputedRadius, mRectPaint);
     }
 
+    @Override
+    public boolean isActivated() {
+        // Any possible side effects?
+        return super.isActivated() || (mProperties.isToggle && mIsToggled);
+    }
 
     public void loadEditValues(EditControlSideDialog editControlPopup){
         editControlPopup.loadValues(getProperties());
