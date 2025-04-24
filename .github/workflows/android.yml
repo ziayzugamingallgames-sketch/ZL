@@ -69,13 +69,13 @@ jobs:
           name: app-release-aab
           path: out/app-gplay.aab
 
-#      - name: Upload onto the Google Play testing track
-#        continue-on-error: true
-#        if: github.repository_owner == 'PojavLauncherTeam' && github.ref_name == 'v3_openjdk'
-#        uses: r0adkll/upload-google-play@v1.1.2
-#        with:
-#          serviceAccountJsonPlainText: ${{ secrets.GPLAY_SERVICE_JSON }}
-#          packageName: net.kdt.pojavlaunch
-#          releaseFiles: out/app-gplay.aab
-#          track: internal
-#          inAppUpdatePriority: 5
+      - name: Upload onto the Google Play testing track
+        continue-on-error: true
+        if: github.repository_owner == 'MojoLauncher' && github.ref_name == 'v3_openjdk'
+        uses: r0adkll/upload-google-play@v1.1.2
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_JSON }}
+          packageName: net.kdt.pojavlaunch
+          releaseFiles: out/app-gplay.aab
+          track: internal
+          inAppUpdatePriority: 5
