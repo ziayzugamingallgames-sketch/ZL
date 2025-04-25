@@ -3,6 +3,8 @@ package net.kdt.pojavlaunch.customcontrols;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import androidx.annotation.NonNull;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
@@ -114,7 +116,7 @@ public class LayoutBitmaps {
         storeZip(fileOutputStream, controlsContainer);
     }
 
-    public static ControlsContainer load(File jsonLocation) throws IOException {
+    public static @NonNull ControlsContainer load(File jsonLocation) throws IOException {
         try (FileInputStream fileInputStream = new FileInputStream(jsonLocation)) {
             return load(fileInputStream);
         }

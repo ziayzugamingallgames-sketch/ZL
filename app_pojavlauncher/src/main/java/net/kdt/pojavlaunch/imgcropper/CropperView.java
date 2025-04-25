@@ -158,7 +158,6 @@ public class CropperView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldW, int oldH) {
         super.onSizeChanged(w, h, oldW, oldH);
-        Log.i("CropperView", "w="+w + "h="+h);
         int lesserDimension = (int)(Math.min(w, h) - mSelectionPadding);
         // Calculate the corners of the new selection frame. It should always appear at the center of the view.
         // Accounts for the aspect ratio.

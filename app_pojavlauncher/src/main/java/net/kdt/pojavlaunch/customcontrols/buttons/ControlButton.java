@@ -79,7 +79,7 @@ public class ControlButton extends TextView implements ControlInterface {
 
     private void setupNormalTint() {
         mComputedRadius = ControlInterface.super.computeCornerRadius(mProperties.cornerRadius);
-
+        setBackgroundTintList(null);
         if (mProperties.isToggle) {
             //For the toggle layer
             final TypedValue value = new TypedValue();
@@ -97,12 +97,9 @@ public class ControlButton extends TextView implements ControlInterface {
         ControlInterface.super.setProperties(properties, changePos);
 
         mHasBitmap = Tools.isValidString(mProperties.bitmapTag);
-        if(mHasBitmap) {
-            setupBitmapTint();
-        } else {
-            setBackgroundTintList(null);
-            setupNormalTint();
-        }
+
+        if(mHasBitmap) setupBitmapTint();
+        else setupNormalTint();
 
         setText(properties.name);
     }

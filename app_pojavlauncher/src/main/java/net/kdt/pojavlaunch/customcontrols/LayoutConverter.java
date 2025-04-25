@@ -1,7 +1,5 @@
 package net.kdt.pojavlaunch.customcontrols;
 
-import android.util.Log;
-
 import com.google.gson.JsonSyntaxException;
 
 import net.kdt.pojavlaunch.LwjglGlfwKeycode;
@@ -21,15 +19,10 @@ public class LayoutConverter {
     public static CustomControls loadAndConvertIfNecessary(String jsonPath) throws IOException, JsonSyntaxException{
         File jsonFile = new File(jsonPath);
         LayoutBitmaps.ControlsContainer container = LayoutBitmaps.load(jsonFile);
-        if(container == null) {
-            throw new JsonSyntaxException("Malformed JSON: LB test failed");
-        }else {
-            LayoutBitmaps layoutBitmaps = container.mLayoutZip;
-            Log.i("LayoutConverter", "lb:" +layoutBitmaps +" data: "+container.mControlsJson);
-            CustomControls controls = internalLoad(container.mControlsJson);
-            controls.mLayoutBitmaps = layoutBitmaps;
-            return controls;
-        }
+        LayoutBitmaps layoutBitmaps = container.mLayoutZip;
+        CustomControls controls = internalLoad(container.mControlsJson);
+        controls.mLayoutBitmaps = layoutBitmaps;
+        return controls;
     }
 
     public static CustomControls internalLoad(String jsonLayoutData) throws JsonSyntaxException {
