@@ -60,6 +60,7 @@ import net.kdt.pojavlaunch.lifecycle.ContextExecutor;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.prefs.QuickSettingSideDialog;
 import net.kdt.pojavlaunch.services.GameService;
+import net.kdt.pojavlaunch.tasks.AsyncAssetManager;
 import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
@@ -102,6 +103,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         instance = InstanceManager.loadSelectedInstance();
+        AsyncAssetManager.extractDefaultSettings(this, instance.getInstanceRoot());
         MCOptionUtils.load(instance.getInstanceRoot().getAbsolutePath());
 
         Intent gameServiceIntent = new Intent(this, GameService.class);
