@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class InstanceEditorFragment extends Fragment implements CropperUtils.CropperListener{
+public class InstanceEditorFragment extends Fragment implements CropperUtils.CropperReceiver {
     public static final String TAG = "InstanceEditorFragment";
 
     private Instance mInstance;
@@ -47,6 +47,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
     private EditText mDefaultName, mDefaultJvmArgument;
     private TextView mDefaultVersion, mDefaultControl;
     private ImageView mInstanceIcon;
+    private int mRecommendedIconSize;
     private final ActivityResultLauncher<?> mCropperLauncher = CropperUtils.registerCropper(this, this);
 
     private List<String> mRenderNames;
@@ -106,7 +107,11 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         mDefaultVersion.setOnClickListener(versionSelectListener);
 
         // Set up the icon change click listener
-        mInstanceIcon.setOnClickListener(v -> CropperUtils.startCropper(mCropperLauncher));
+        mInstanceIcon.setOnClickListener(v -> {
+            // Fill recommended size on click to ge the most up to date data
+            mRecommendedIconSize = Math.max(v.getWidth(), v.getHeight());
+            CropperUtils.startCropper(mCropperLauncher);
+        });
 
         loadValues(InstanceManager.getSelectedListedInstance(), view.getContext());
     }
@@ -198,6 +203,16 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         }catch (IOException e) {
             Tools.showErrorRemote(e);
         }
+    }
+
+    @Override
+    public float getAspectRatio() {
+        return 1f;
+    }
+
+    @Override
+    public int getTargetMaxSide() {
+        return mRecommendedIconSize;
     }
 
     @Override
