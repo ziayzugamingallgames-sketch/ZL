@@ -216,10 +216,12 @@ class AssetTaskRegistrar {
     def projectJarDependency(Project project, String relativePath) {
         def targetDir = assetDestination(relativePath)
         createDirectories targetDir
+        // Nasty hack: explicitly reference project by name to force Gradle to configure it.
+        // Makes jar task search below work properly for fresh configurations.
+        mergeAssetsTask.dependsOn(":"+project.name+":jar");
 
         project.tasks.withType(org.gradle.jvm.tasks.Jar.class).configureEach {
             it.destinationDirectory = targetDir
-            mergeAssetsTask.dependsOn it
             doLast {
                 if(!it.didWork) return
                 writeVersion targetDir
@@ -239,30 +241,29 @@ class AssetTaskRegistrar {
     }
 }
 
-def registrar = new AssetTaskRegistrar(project);
 
-android.applicationVariants.configureEach { variant ->
-    registrar.setVariant(variant)
-
-    registrar.projectJarDependency project(":forge_installer"), "components/forge_installer"
-    registrar.projectJarDependency project(":arc_dns_injector"), "components/arc_dns_injector"
-    registrar.projectJarDependency project(":jre_lwjgl3glfw"), "components/lwjgl3"
-
-    def jreBuildRepository = "https://nightly.link/MojoLauncher/android-openjdk-build-multiarch/workflows/build/";
-
-    registrar.onlineZipDependency jreBuildRepository+"buildjre8/jre8-pojav.zip", "ComponentRuntime8", "components/jre/"
-    registrar.onlineZipDependency jreBuildRepository+"buildjre17-21/jre17-pojav.zip", "ComponentRuntime17", "components/jre-new"
-    registrar.onlineZipDependency jreBuildRepository+"buildjre17-21/jre21-pojav.zip", "ComponentRuntime21", "components/jre-21"
-
-    def cacioBuildRepository = "https://nightly.link/MojoLauncher/%s/workflows/maven/master/caciocavallo.zip"
-
-    registrar.onlineJarDependency String.format(cacioBuildRepository, "caciocavallo"), "Caciocavallo", "components/caciocavallo"
-    registrar.onlineJarDependency String.format(cacioBuildRepository, "caciocavallo17"), "Caciocavallo17", "components/caciocavallo17"
-}
 
 afterEvaluate {
-    // Explicit dependencies for which the apk relies on
-    tasks.mergeDebugAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":jre_lwjgl3glfw:jar")
+    def registrar = new AssetTaskRegistrar(project);
+
+    android.applicationVariants.configureEach { variant ->
+        registrar.setVariant(variant)
+
+        registrar.projectJarDependency project(":forge_installer"), "components/forge_installer"
+        registrar.projectJarDependency project(":arc_dns_injector"), "components/arc_dns_injector"
+        registrar.projectJarDependency project(":jre_lwjgl3glfw"), "components/lwjgl3"
+
+        def jreBuildRepository = "https://nightly.link/MojoLauncher/android-openjdk-build-multiarch/workflows/build/";
+
+        registrar.onlineZipDependency jreBuildRepository+"buildjre8/jre8-pojav.zip", "ComponentRuntime8", "components/jre/"
+        registrar.onlineZipDependency jreBuildRepository+"buildjre17-21/jre17-pojav.zip", "ComponentRuntime17", "components/jre-new"
+        registrar.onlineZipDependency jreBuildRepository+"buildjre17-21/jre21-pojav.zip", "ComponentRuntime21", "components/jre-21"
+
+        def cacioBuildRepository = "https://nightly.link/MojoLauncher/%s/workflows/maven/master/caciocavallo.zip"
+
+        registrar.onlineJarDependency String.format(cacioBuildRepository, "caciocavallo"), "Caciocavallo", "components/caciocavallo"
+        registrar.onlineJarDependency String.format(cacioBuildRepository, "caciocavallo17"), "Caciocavallo17", "components/caciocavallo17"
+    }
 }
 
 dependencies {
