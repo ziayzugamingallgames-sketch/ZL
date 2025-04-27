@@ -9,8 +9,8 @@ import android.util.TypedValue;
 import androidx.core.graphics.ColorUtils;
 
 public class BackgroundTint {
-    private static final int BACKGROUND_DEFAULT_TINT_ALPHA = 90;
-    private static final int BACKGROUND_TOGGLE_TINT_ALPHA = 192;
+    public static final int BACKGROUND_DEFAULT_TINT_ALPHA = 60;
+    public static final int BACKGROUND_TOGGLE_TINT_ALPHA = 128;
 
     private static int lastTheme = System.identityHashCode(BackgroundTint.class);
 

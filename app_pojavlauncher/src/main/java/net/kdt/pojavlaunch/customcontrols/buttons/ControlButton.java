@@ -85,10 +85,10 @@ public class ControlButton extends TextView implements ControlInterface {
             final TypedValue value = new TypedValue();
             getContext().getTheme().resolveAttribute(R.attr.colorAccent, value, true);
             mRectPaint.setColor(value.data);
-            mRectPaint.setAlpha(128);
+            mRectPaint.setAlpha(BackgroundTint.BACKGROUND_TOGGLE_TINT_ALPHA);
         } else {
             mRectPaint.setColor(Color.WHITE);
-            mRectPaint.setAlpha(60);
+            mRectPaint.setAlpha(BackgroundTint.BACKGROUND_DEFAULT_TINT_ALPHA);
         }
     }
 
