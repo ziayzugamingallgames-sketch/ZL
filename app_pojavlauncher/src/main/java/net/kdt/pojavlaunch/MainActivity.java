@@ -350,7 +350,6 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             String firstCompatibleRenderer = renderersList.rendererIds.get(0);
             Log.w("runCraft","Incompatible renderer "+Tools.LOCAL_RENDERER+ " will be replaced with "+firstCompatibleRenderer);
             Tools.LOCAL_RENDERER = firstCompatibleRenderer;
-            Tools.releaseRenderersCache();
         }
         MinecraftAccount minecraftAccount = PojavProfile.getCurrentProfileContent(this, null);
         Logger.appendToLog("--------- Starting game with Launcher Debug!");

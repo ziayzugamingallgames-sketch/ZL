@@ -436,4 +436,5 @@
     <string name="bta_installer_untested_versions">Untested BTA versions</string>
     <string name="bta_installer_nightly_versions">Nightly BTA versions</string>
     <string name="newdl_extracting_native_libraries">Extracting native libraries (%d/%d)</string>
+    <string name="compat_version_not_supported">Your device cannot run this version because LTW is not supported on your device.</string>
 </resources>

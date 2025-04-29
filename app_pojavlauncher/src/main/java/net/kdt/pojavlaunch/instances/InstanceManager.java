@@ -70,7 +70,7 @@ public class InstanceManager {
         }
 
         if(sInstanceList.isEmpty()) {
-            createDefaultInstance();
+            createFirstTimeInstance();
         }
 
         if(sSelectedInstance == null) {
@@ -145,6 +145,16 @@ public class InstanceManager {
             setSelectedInstance(sInstanceList.get(0));
         }
         org.apache.commons.io.FileUtils.deleteDirectory(instanceDirectory);
+    }
+
+    /**
+     * Create a new instance intended for first-time launcher users.
+     */
+    public static void createFirstTimeInstance() throws IOException {
+        createInstance((instance)-> {
+            instance.sharedData = true;
+            instance.versionId = "1.12.2";
+        }, null);
     }
 
     /**

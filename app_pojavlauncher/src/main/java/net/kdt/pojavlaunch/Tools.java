@@ -257,6 +257,23 @@ public final class Tools {
         return renderDistance > 7;
     }
 
+    private static boolean isGl4esCompatible(JMinecraftVersionList.Version version) throws Exception{
+        return DateUtils.dateBefore(DateUtils.getOriginalReleaseDate(version), 2025, 1, 7);
+    }
+
+    private static boolean isCompatContext(JMinecraftVersionList.Version version) throws Exception{
+        // Day before the release date of 21w10a, the first OpenGL 3 Core Minecraft version
+        return DateUtils.dateBefore(DateUtils.getOriginalReleaseDate(version), 2021, 3, 9);
+    }
+
+    private static boolean showDialog(AppCompatActivity activity, int message) throws InterruptedException {
+        LifecycleAwareAlertDialog.DialogCreator dialogCreator = ((alertDialog, dialogBuilder) ->
+                dialogBuilder.setMessage(activity.getString(message))
+                        .setCancelable(false)
+                        .setPositiveButton(android.R.string.ok, (d, w)->{}));
+        return LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator);
+    }
+
     public static void launchMinecraft(final AppCompatActivity activity, MinecraftAccount minecraftAccount,
                                        Instance instance, String versionId, int versionJavaRequirement) throws Throwable {
         int freeDeviceMemory = getFreeDeviceMemory(activity);
@@ -283,13 +300,29 @@ public final class Tools {
             }
         }
         File gamedir = instance.getGameDirectory();
-        if(checkRenderDistance(gamedir)) {
-            LifecycleAwareAlertDialog.DialogCreator dialogCreator = ((alertDialog, dialogBuilder) ->
-                    dialogBuilder.setMessage(activity.getString(R.string.ltw_render_distance_warning_msg))
-                            .setPositiveButton(android.R.string.ok, (d, w)->{}));
-            if(LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator)) {
+        JMinecraftVersionList.Version versionInfo = Tools.getVersionInfo(versionId);
+
+        // Switch renderer to GL4ES when running a compat context version on LTW
+        if(isCompatContext(versionInfo) && Tools.LOCAL_RENDERER.equals("opengles3_ltw")) {
+            instance.renderer = Tools.LOCAL_RENDERER = "opengles2";
+            instance.write();
+        }
+
+        // Switch renderer to LTW when running 1.21.5
+        boolean ltwSupported = Tools.getCompatibleRenderers(activity).rendererIds.contains("opengles3_ltw");
+        if(!isGl4esCompatible(versionInfo) && Tools.LOCAL_RENDERER.equals("opengles2")) {
+            if(ltwSupported) {
+                instance.renderer = Tools.LOCAL_RENDERER = "opengles3_ltw";
+                instance.write();
+            }else {
+                showDialog(activity, R.string.compat_version_not_supported);
+                System.exit(0);
                 return;
             }
+        }
+
+        if(checkRenderDistance(gamedir)) {
+            if(showDialog(activity, R.string.ltw_render_distance_warning_msg)) return;
             // If the code goes here, it means that the user clicked "OK". Fix the render distance.
             try {
                 MCOptionUtils.set("renderDistance", "7");
@@ -301,7 +334,6 @@ public final class Tools {
 
 
         Runtime runtime = MultiRTUtils.forceReread(Tools.pickRuntime(instance, versionJavaRequirement));
-        JMinecraftVersionList.Version versionInfo = Tools.getVersionInfo(versionId);
 
 
         // Pre-process specific files
@@ -342,6 +374,7 @@ public final class Tools {
         // ctx.appendlnToLog("full args: "+javaArgList.toString());
         String args = instance.getLaunchArgs();
         FFmpegPlugin.discover(activity);
+        Tools.releaseRenderersCache();
         JREUtils.launchJavaVM(activity, runtime, gamedir, javaArgList, args);
         // If we returned, this means that the JVM exit dialog has been shown and we don't need to be active anymore.
         // We never return otherwise. The process will be killed anyway, and thus we will become inactive
