@@ -176,6 +176,8 @@ public class InstanceManager {
      * @throws IOException if directory creation/instance writing fails
      */
     public static Instance createInstance(InstanceSetter instanceSetter, String namePrefix) throws IOException {
+        // Make sure the instance list is loaded before creating a new instance.
+        load();
         File root = findNewInstanceRoot(namePrefix);
         FileUtils.ensureDirectory(root);
         Instance instance = new Instance();
