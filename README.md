@@ -29,7 +29,7 @@
 
 You can get MojoLauncher via three methods:
 
-1. You can get the prebuilt app from [stable releases](https://github.com/MojoLauncher/MojoLauncher/releases) or [automatic builds](https://github.com/MojoLauncher/MojoLauncher/actions).
+1. You can get the prebuilt app from [automatic builds](https://github.com/MojoLauncher/MojoLauncher/actions).
 
 2. You can get it from Google Play by clicking on this badge:
 [![Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=git.artdeell.mojo)
