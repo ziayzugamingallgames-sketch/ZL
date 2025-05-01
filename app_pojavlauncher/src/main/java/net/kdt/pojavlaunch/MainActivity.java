@@ -103,6 +103,11 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         instance = InstanceManager.loadSelectedInstance();
+        if(instance == null) {
+            Toast.makeText(this, R.string.instance_dir_missing, Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
         AsyncAssetManager.extractDefaultSettings(this, instance.getGameDirectory());
         MCOptionUtils.load(instance.getGameDirectory().getAbsolutePath());
 
