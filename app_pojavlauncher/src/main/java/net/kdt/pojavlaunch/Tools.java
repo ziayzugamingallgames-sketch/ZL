@@ -16,6 +16,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -696,20 +697,21 @@ public final class Tools {
         return px / currentDisplayMetrics.density;
     }
 
-    public static void copyAssetFile(Context ctx, String fileName, String output, boolean overwrite) throws IOException {
-        copyAssetFile(ctx, fileName, output, new File(fileName).getName(), overwrite);
+    public static void copyAssetFile(Context ctx, String assetPath, String output, boolean overwrite) throws IOException {
+        String fileName = FileUtils.getFileName(assetPath);
+        if(fileName == null) fileName = assetPath;
+        File outputFile = new File(output, fileName);
+        copyAssetFile(ctx.getAssets(), assetPath, outputFile, overwrite);
     }
 
-    public static void copyAssetFile(Context ctx, String fileName, String output, String outputName, boolean overwrite) throws IOException {
-        File parentFolder = new File(output);
-        FileUtils.ensureDirectory(parentFolder);
-        File destinationFile = new File(output, outputName);
-        if(!destinationFile.exists() || overwrite){
-            try(InputStream inputStream = ctx.getAssets().open(fileName)) {
-                try (OutputStream outputStream = new FileOutputStream(destinationFile)){
-                    IOUtils.copy(inputStream, outputStream);
-                }
-            }
+    public static void copyAssetFile(AssetManager assetManager, String fileName, File output, boolean overwrite) throws IOException {
+        FileUtils.ensureParentDirectory(output);
+        if(output.exists() && !overwrite) return;
+        try (
+                InputStream inputStream = assetManager.open(fileName);
+                FileOutputStream fileOutputStream = new FileOutputStream(output)
+        ){
+            IOUtils.copy(inputStream, fileOutputStream);
         }
     }
 

@@ -130,6 +130,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         final String progressKey;
         final TextProgressBar textView;
         final LinearLayout.LayoutParams params;
+        boolean isAttached = false;
         public LayoutProgressListener(String progressKey) {
             this.progressKey = progressKey;
             textView = new TextProgressBar(getContext());
@@ -142,7 +143,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         public void onProgressStarted() {
             post(()-> {
                 Log.i("ProgressLayout", "onProgressStarted");
-                mLinearLayout.addView(textView, params);
+                if(!isAttached) mLinearLayout.addView(textView, params);
+                isAttached = true;
             });
         }
 
@@ -160,6 +162,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         public void onProgressEnded() {
             post(()-> {
                 mLinearLayout.removeView(textView);
+                isAttached = false;
             });
         }
     }

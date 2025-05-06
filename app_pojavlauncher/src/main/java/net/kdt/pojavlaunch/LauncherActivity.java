@@ -178,12 +178,6 @@ public class LauncherActivity extends BaseActivity {
                     .add(R.id.container_fragment, MainMenuFragment.class, null, "ROOT").commit();
         }
 
-        try {
-            Log.i("ProfileWatcher", "Profile consumed: "+ ProfileWatcher.consumePendingVersion());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
         IconCacheJanitor.runJanitor();
         mRequestNotificationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
