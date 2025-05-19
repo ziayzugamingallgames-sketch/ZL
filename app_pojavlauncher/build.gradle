@@ -170,12 +170,15 @@ class AssetTaskRegistrar {
     private File targetAssetsDir
     private String variantName
     private File targetDownloadDir
+    private File projectJarDir
 
     AssetTaskRegistrar(Project project) {
         this.project = project
 
         targetDownloadDir = new File(project.projectDir, "build/intermediates/download_deps")
-        createDirectories(targetDownloadDir)
+        projectJarDir = new File(project.projectDir, "build/intermediates/package_jar_deps")
+        createDirectories targetDownloadDir
+        createDirectories projectJarDir
     }
 
     def setVariant(variant) {
@@ -227,17 +230,27 @@ class AssetTaskRegistrar {
     }
 
     def projectJarDependency(Project project, String relativePath) {
-        def targetDir = assetDestination(relativePath)
-        createDirectories targetDir
-        // Nasty hack: explicitly reference project by name to force Gradle to configure it.
-        // Makes jar task search below work properly for fresh configurations.
-        mergeAssetsTask.dependsOn(":${project.name}:jar");
+        def assetTargetDir = assetDestination(relativePath)
+        def jarTargetDir = new File(projectJarDir, relativePath)
+        createDirectories assetTargetDir
+        createDirectories jarTargetDir
+
+        def copyTaskName = "copyProjectJar${jarTargetDir.getName()}${variantName}"
+        def copyTask = project.tasks.register(copyTaskName, Copy) {
+            from jarTargetDir
+            into assetTargetDir
+            // Nasty hack: explicitly reference project by name to force Gradle to configure it.
+            // Makes jar task search below work properly for fresh configurations.
+            dependsOn ":${project.name}:jar"
+        }
+
+        mergeAssetsTask.dependsOn copyTask;
 
         project.tasks.withType(org.gradle.jvm.tasks.Jar.class).configureEach {
-            it.destinationDirectory = targetDir
+            it.destinationDirectory = jarTargetDir
             doLast {
                 if(!it.didWork) return
-                writeVersion targetDir
+                writeVersion jarTargetDir
             }
         }
     }
