@@ -18,7 +18,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         LocaleUtils.setLocale(this);
-        Tools.setFullscreen(this, setFullscreen(), shouldIgnoreNotch());
+        Tools.setInsetsMode(this, setFullscreen(), shouldIgnoreNotch());
         Tools.updateWindowSize(this);
     }
 
@@ -43,7 +43,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        Tools.setFullscreen(this, setFullscreen(), shouldIgnoreNotch());
+        Tools.setInsetsMode(this, setFullscreen(), shouldIgnoreNotch());
     }
 
     /** @return Whether or not the notch should be ignored */

@@ -652,8 +652,7 @@ public final class Tools {
     }
 
     @RequiresApi(Build.VERSION_CODES.P)
-    @SuppressWarnings("deprecation")
-    private static void setLegacyNotch(Window window, boolean ignoreNotch) {
+    private static void setCutoutMode(Window window, boolean ignoreNotch) {
         WindowManager.LayoutParams layoutParams = window.getAttributes();
         if (ignoreNotch) {
             layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
@@ -681,37 +680,37 @@ public final class Tools {
         insetView.setOnSystemUiVisibilityChangeListener(listener);
     }
 
-    public static void setFullscreen(Activity activity, boolean fullscreen, boolean ignoreNotch) {
+    public static void setInsetsMode(Activity activity, boolean noSystemBars, boolean ignoreNotch) {
         Window window = activity.getWindow();
-        View insetView = activity.findViewById(android.R.id.content);
+        View insetView = activity.findViewById(android.R.id.content).getRootView();
+        // Don't ignore system bars in window mode (will put game behind window button bar)
+        if(SDK_INT >= Build.VERSION_CODES.N && activity.isInMultiWindowMode()) noSystemBars = false;
 
-        // Ignore fullscreen mode in multi-window mode (it makes no sense and causes bugs)
-        if(SDK_INT >= Build.VERSION_CODES.N && activity.isInMultiWindowMode()) fullscreen = false;
-
-        // The status bars are completely transparent and will take their color from the view inset
+        int bgColor = Color.BLACK;
+        // The status bars are completely transparent and will take their color from the inset view
         // padding.
-        if(fullscreen) {
-            insetView.setBackgroundColor(Color.BLACK);
-        }else {
-            insetView.setBackgroundColor(activity.getResources().getColor(R.color.background_status_bar));
-        }
+        if(!noSystemBars) bgColor = activity.getResources().getColor(R.color.background_status_bar);
+        insetView.setBackgroundColor(bgColor);
+
+        // On API 35 onwards, apps are edge-to-edge by default and are controlled entirely though the
+        // inset API. On levels below, we still need to set the correct cutout mode.
+        if(SDK_INT >= Build.VERSION_CODES.P) setCutoutMode(window, ignoreNotch);
 
         // The AppCompat APIs don't work well, and break when opening alert dialogs on older Android
-        // versions. Use the legacy implementations of fullscreen and notch for API <30
+        // versions. Use the legacy fullscreen flags for lower APIs. (notch is already handled above)
         if(SDK_INT < Build.VERSION_CODES.R) {
-            setLegacyFullscreen(insetView, fullscreen);
-            if(SDK_INT >= Build.VERSION_CODES.P) setLegacyNotch(window, ignoreNotch);
+            setLegacyFullscreen(insetView, noSystemBars);
             return;
         }
 
         WindowInsetsController insetsController = window.getInsetsController();
         if(insetsController != null) {
             insetsController.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            if(fullscreen) insetsController.hide(WindowInsets.Type.systemBars());
+            if(noSystemBars) insetsController.hide(WindowInsets.Type.systemBars());
             else insetsController.show(WindowInsets.Type.systemBars());
         }
 
-        boolean fFullscreen = fullscreen;
+        boolean fFullscreen = noSystemBars;
         insetView.setOnApplyWindowInsetsListener((v, windowInsets) -> {
             int insetMask = 0;
             if(!fFullscreen) insetMask |= WindowInsets.Type.systemBars();
@@ -725,6 +724,7 @@ public final class Tools {
             v.post(()->Tools.updateWindowSize(activity));
             return WindowInsets.CONSUMED;
         });
+        insetView.requestApplyInsets();
     }
 
     public static DisplayMetrics currentDisplayMetrics;
