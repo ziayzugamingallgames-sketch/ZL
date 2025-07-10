@@ -50,7 +50,7 @@ configurations {
 android {
     namespace 'git.artdeell.mojo'
 
-    compileSdk = 34
+    compileSdk = 35
 
     lintOptions {
         abortOnError false
@@ -74,7 +74,7 @@ android {
     defaultConfig {
         applicationId "git.artdeell.mojo"
         minSdkVersion 21
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode getDateSeconds()
         versionName getVersionName()
         multiDexEnabled true //important

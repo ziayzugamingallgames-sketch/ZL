@@ -1,7 +1,6 @@
 package net.kdt.pojavlaunch;
 
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.P;
 import static net.kdt.pojavlaunch.PojavApplication.sExecutorService;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_IGNORE_NOTCH;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_NOTCH_SIZE;
@@ -20,6 +19,7 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.Uri;
@@ -34,7 +34,7 @@ import android.util.ArrayMap;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
+import android.view.Window;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +44,11 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
@@ -82,7 +87,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
@@ -647,28 +651,43 @@ public final class Tools {
         return displayMetrics;
     }
 
-    public static void setFullscreen(Activity activity, boolean fullscreen) {
-        final View decorView = activity.getWindow().getDecorView();
-        View.OnSystemUiVisibilityChangeListener visibilityChangeListener = visibility -> {
-            boolean multiWindowMode = SDK_INT >= 24 && activity.isInMultiWindowMode();
-            // When in multi-window mode, asking for fullscreen makes no sense (cause the launcher runs in a window)
-            // So, ignore the fullscreen setting when activity is in multi window mode
-            if(fullscreen && !multiWindowMode){
-                if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                    decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-                }
-            }else{
-                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-            }
+    public static void setFullscreen(Activity activity, boolean fullscreen, boolean ignoreNotch) {
+        Window window = activity.getWindow();
+        View insetView = activity.findViewById(android.R.id.content);
 
-        };
-        decorView.setOnSystemUiVisibilityChangeListener(visibilityChangeListener);
-        visibilityChangeListener.onSystemUiVisibilityChange(decorView.getSystemUiVisibility()); //call it once since the UI state may not change after the call, so the activity wont become fullscreen
+        // Ignore fullscreen mode in multi-window mode (it makes no sense and causes bugs)
+        if(SDK_INT >= Build.VERSION_CODES.N && activity.isInMultiWindowMode()) fullscreen = false;
+
+
+        // The status bars are completely ransaprent and will take their color from the view inset
+        // padding.
+        if(fullscreen) {
+            insetView.setBackgroundColor(Color.BLACK);
+        }else {
+            insetView.setBackgroundColor(activity.getResources().getColor(R.color.background_status_bar));
+        }
+
+        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, insetView);
+        if(insetsController != null) {
+            insetsController.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            if(fullscreen) insetsController.hide(WindowInsetsCompat.Type.systemBars());
+            else insetsController.show(WindowInsetsCompat.Type.systemBars());
+        }
+
+        boolean fFullscreen = fullscreen;
+        ViewCompat.setOnApplyWindowInsetsListener(insetView, (v, windowInsets) -> {
+            int insetMask = 0;
+            if(!fFullscreen) insetMask |= WindowInsetsCompat.Type.systemBars();
+            if(!ignoreNotch) insetMask |= WindowInsetsCompat.Type.displayCutout();
+            if(insetMask != 0) {
+                Insets insets = windowInsets.getInsets(insetMask);
+                insetView.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            }else {
+                insetView.setPadding(0, 0, 0, 0);
+            }
+            v.post(()->Tools.updateWindowSize(activity));
+            return WindowInsetsCompat.CONSUMED;
+        });
     }
 
     public static DisplayMetrics currentDisplayMetrics;
@@ -1090,18 +1109,6 @@ public final class Tools {
         }catch (IOException e) {
             Log.i("SHA1","Fake-matching a hash due to a read error",e);
             return true;
-        }
-    }
-
-    public static void ignoreNotch(boolean shouldIgnore, Activity ctx){
-        if (SDK_INT >= P) {
-            if (shouldIgnore) {
-                ctx.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-            } else {
-                ctx.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
-            }
-            ctx.getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
-            Tools.updateWindowSize(ctx);
         }
     }
 
