@@ -20,6 +20,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Insets;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.Uri;
@@ -35,20 +36,19 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
@@ -651,6 +651,36 @@ public final class Tools {
         return displayMetrics;
     }
 
+    @RequiresApi(Build.VERSION_CODES.P)
+    @SuppressWarnings("deprecation")
+    private static void setLegacyNotch(Window window, boolean ignoreNotch) {
+        WindowManager.LayoutParams layoutParams = window.getAttributes();
+        if (ignoreNotch) {
+            layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        } else {
+            layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+        }
+        window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void setLegacyFullscreen(View insetView, boolean fullscreen) {
+        View.OnSystemUiVisibilityChangeListener listener = (visibility)->{
+            if(fullscreen && (visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                insetView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+            }else if(!fullscreen) {
+                insetView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+            }
+        };
+        listener.onSystemUiVisibilityChange(insetView.getSystemUiVisibility());
+        insetView.setOnSystemUiVisibilityChangeListener(listener);
+    }
+
     public static void setFullscreen(Activity activity, boolean fullscreen, boolean ignoreNotch) {
         Window window = activity.getWindow();
         View insetView = activity.findViewById(android.R.id.content);
@@ -658,8 +688,7 @@ public final class Tools {
         // Ignore fullscreen mode in multi-window mode (it makes no sense and causes bugs)
         if(SDK_INT >= Build.VERSION_CODES.N && activity.isInMultiWindowMode()) fullscreen = false;
 
-
-        // The status bars are completely ransaprent and will take their color from the view inset
+        // The status bars are completely transparent and will take their color from the view inset
         // padding.
         if(fullscreen) {
             insetView.setBackgroundColor(Color.BLACK);
@@ -667,18 +696,26 @@ public final class Tools {
             insetView.setBackgroundColor(activity.getResources().getColor(R.color.background_status_bar));
         }
 
-        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, insetView);
+        // The AppCompat APIs don't work well, and break when opening alert dialogs on older Android
+        // versions. Use the legacy implementations of fullscreen and notch for API <30
+        if(SDK_INT < Build.VERSION_CODES.R) {
+            setLegacyFullscreen(insetView, fullscreen);
+            if(SDK_INT >= Build.VERSION_CODES.P) setLegacyNotch(window, ignoreNotch);
+            return;
+        }
+
+        WindowInsetsController insetsController = window.getInsetsController();
         if(insetsController != null) {
-            insetsController.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            if(fullscreen) insetsController.hide(WindowInsetsCompat.Type.systemBars());
-            else insetsController.show(WindowInsetsCompat.Type.systemBars());
+            insetsController.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            if(fullscreen) insetsController.hide(WindowInsets.Type.systemBars());
+            else insetsController.show(WindowInsets.Type.systemBars());
         }
 
         boolean fFullscreen = fullscreen;
-        ViewCompat.setOnApplyWindowInsetsListener(insetView, (v, windowInsets) -> {
+        insetView.setOnApplyWindowInsetsListener((v, windowInsets) -> {
             int insetMask = 0;
-            if(!fFullscreen) insetMask |= WindowInsetsCompat.Type.systemBars();
-            if(!ignoreNotch) insetMask |= WindowInsetsCompat.Type.displayCutout();
+            if(!fFullscreen) insetMask |= WindowInsets.Type.systemBars();
+            if(!ignoreNotch) insetMask |= WindowInsets.Type.displayCutout();
             if(insetMask != 0) {
                 Insets insets = windowInsets.getInsets(insetMask);
                 insetView.setPadding(insets.left, insets.top, insets.right, insets.bottom);
@@ -686,7 +723,7 @@ public final class Tools {
                 insetView.setPadding(0, 0, 0, 0);
             }
             v.post(()->Tools.updateWindowSize(activity));
-            return WindowInsetsCompat.CONSUMED;
+            return WindowInsets.CONSUMED;
         });
     }
 
