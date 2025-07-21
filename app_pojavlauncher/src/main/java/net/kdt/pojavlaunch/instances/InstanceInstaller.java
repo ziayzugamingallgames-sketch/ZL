@@ -3,7 +3,7 @@ package net.kdt.pojavlaunch.instances;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+import android.content.res.AssetManager;
 
 import com.kdt.mcgui.ProgressLayout;
 
@@ -77,12 +77,12 @@ public class InstanceInstaller implements ContextExecutorTask {
         }
     }
 
-    public static void postInstallCheck() throws IOException {
+    public static void postInstallCheck(AssetManager assetManager) throws IOException {
         if(!sLastInstallInfo.exists() || !sLastInstallInfo.isFile()) return;
         InstanceInstaller lastInstaller = JSONUtils.readFromFile(sLastInstallInfo, InstanceInstaller.class);
-        lastInstaller.installerJar().delete();
+        boolean ignored = lastInstaller.installerJar().delete();
         if(!sLastInstallInfo.delete()) throw new IOException("Failed to delete mod installer info");
-        String targetVersionId = ProfileWatcher.consumePendingVersion();
+        String targetVersionId = ProfileWatcher.consumePendingVersion(assetManager);
         if(targetVersionId == null) return;
         for(Instance instance : InstanceManager.getImmutableInstanceList()) {
             if(!lastInstaller.equals(instance.installer)) continue;
@@ -95,7 +95,7 @@ public class InstanceInstaller implements ContextExecutorTask {
 
     public static void postInstallCheck(Context context) {
         try {
-            InstanceInstaller.postInstallCheck();
+            InstanceInstaller.postInstallCheck(context.getAssets());
         }catch (Exception e) {
             Tools.showError(context, e);
         }
@@ -131,7 +131,7 @@ public class InstanceInstaller implements ContextExecutorTask {
     @Override
     public void executeWithActivity(Activity activity) {
         try {
-            Tools.copyAssetFile(activity, "launcher_profiles.json", Tools.DIR_GAME_NEW, true);
+            ProfileWatcher.installDefaultProfiles(activity.getAssets());
             writeLastInstaller();
         }catch (Exception e) {
             Tools.showError(activity, e);

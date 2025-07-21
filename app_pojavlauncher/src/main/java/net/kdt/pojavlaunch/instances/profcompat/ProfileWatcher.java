@@ -1,5 +1,7 @@
 package net.kdt.pojavlaunch.instances.profcompat;
 
+import android.content.res.AssetManager;
+
 import net.kdt.pojavlaunch.Tools;
 
 import java.io.File;
@@ -11,23 +13,22 @@ import java.util.Map;
 
 public class ProfileWatcher {
     private static final File sLauncherProfiles = new File(Tools.DIR_GAME_NEW, "launcher_profiles.json");
-    public static String consumePendingVersion() throws IOException {
+    public static String consumePendingVersion(AssetManager assetManager) throws IOException {
         Profiles store;
         try(FileReader fileReader = new FileReader(sLauncherProfiles)) {
             store = Tools.GLOBAL_GSON.fromJson(fileReader, Profiles.class);
         }
         Map<String, ProfileBody> profiles = store.profiles;
         String versionId = null;
-        Iterator<Map.Entry<String, ProfileBody>> iter = profiles.entrySet().iterator();
-        while(iter.hasNext()) {
-            Map.Entry<String, ProfileBody> entry = iter.next();
-            if("(Default)".equals(entry.getKey())) continue;
-            if(versionId == null) versionId = entry.getValue().lastVersionId;
-            iter.remove();
+        for (Map.Entry<String, ProfileBody> entry : profiles.entrySet()) {
+            if ("(Default)".equals(entry.getKey())) continue;
+            versionId = entry.getValue().lastVersionId;
+            if(versionId != null) break;
         }
-        try (FileWriter fileWriter = new FileWriter(sLauncherProfiles)) {
-            Tools.GLOBAL_GSON.toJson(store, fileWriter);
-        }
+        installDefaultProfiles(assetManager);
         return versionId;
+    }
+    public static void installDefaultProfiles(AssetManager assetManager) throws IOException {
+        Tools.copyAssetFile(assetManager, "launcher_profiles.json", sLauncherProfiles, true);
     }
 }

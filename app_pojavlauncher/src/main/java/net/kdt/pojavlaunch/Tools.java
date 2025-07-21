@@ -1,10 +1,7 @@
 package net.kdt.pojavlaunch;
 
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.P;
 import static net.kdt.pojavlaunch.PojavApplication.sExecutorService;
-import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_IGNORE_NOTCH;
-import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_NOTCH_SIZE;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -16,9 +13,11 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.Insets;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.Uri;
@@ -33,6 +32,9 @@ import android.util.ArrayMap;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -40,6 +42,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationManagerCompat;
@@ -68,12 +71,11 @@ import net.kdt.pojavlaunch.utils.JSONUtils;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
 import net.kdt.pojavlaunch.utils.OldVersionsUtils;
 import net.kdt.pojavlaunch.value.DependentLibrary;
-import net.kdt.pojavlaunch.value.MinecraftAccount;
+import net.kdt.pojavlaunch.authenticator.accounts.MinecraftAccount;
 import net.kdt.pojavlaunch.value.MinecraftLibraryArtifact;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
-import org.lwjgl.glfw.CallbackBridge;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -81,7 +83,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
@@ -365,6 +366,8 @@ public final class Tools {
             javaArgList.add("-Djna.boot.library.path="+dirPath);
         }
 
+        addAuthlibInjectorArgs(javaArgList, minecraftAccount);
+
         javaArgList.addAll(Arrays.asList(getMinecraftJVMArgs(versionId, gamedir)));
         javaArgList.add("-cp");
         javaArgList.add(launchClassPath + ":" + getLWJGL3ClassPath());
@@ -407,6 +410,12 @@ public final class Tools {
         } else {
             Log.w(Tools.APP_NAME, "Failed to create the configuration directory");
         }
+    }
+
+    public static void addAuthlibInjectorArgs(List<String> javaArgList, MinecraftAccount minecraftAccount) {
+        String injectorUrl = minecraftAccount.authType.injectorUrl;
+        if(injectorUrl == null) return;
+        javaArgList.add("-javaagent:"+Tools.DIR_DATA+"/authlib-injector/authlib-injector.jar="+injectorUrl);
     }
 
     public static void getCacioJavaArgs(List<String> javaArgList, boolean isJava8) {
@@ -610,10 +619,6 @@ public final class Tools {
         return finalClasspath.toString();
     }
 
-
-
-
-
     public static DisplayMetrics getDisplayMetrics(Activity activity) {
         DisplayMetrics displayMetrics = new DisplayMetrics();
 
@@ -626,65 +631,94 @@ public final class Tools {
             } else { // Removed the clause for devices with unofficial notch support, since it also ruins all devices with virtual nav bars before P
                 activity.getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
             }
-            if(!PREF_IGNORE_NOTCH){
-                //Remove notch width when it isn't ignored.
-                if(activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
-                    displayMetrics.heightPixels -= PREF_NOTCH_SIZE;
-                else
-                    displayMetrics.widthPixels -= PREF_NOTCH_SIZE;
-            }
         }
         currentDisplayMetrics = displayMetrics;
         return displayMetrics;
     }
 
-    public static void setFullscreen(Activity activity, boolean fullscreen) {
-        final View decorView = activity.getWindow().getDecorView();
-        View.OnSystemUiVisibilityChangeListener visibilityChangeListener = visibility -> {
-            boolean multiWindowMode = SDK_INT >= 24 && activity.isInMultiWindowMode();
-            // When in multi-window mode, asking for fullscreen makes no sense (cause the launcher runs in a window)
-            // So, ignore the fullscreen setting when activity is in multi window mode
-            if(fullscreen && !multiWindowMode){
-                if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                    decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-                }
-            }else{
-                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-            }
-
-        };
-        decorView.setOnSystemUiVisibilityChangeListener(visibilityChangeListener);
-        visibilityChangeListener.onSystemUiVisibilityChange(decorView.getSystemUiVisibility()); //call it once since the UI state may not change after the call, so the activity wont become fullscreen
+    @RequiresApi(Build.VERSION_CODES.P)
+    private static void setCutoutMode(Window window, boolean ignoreNotch) {
+        WindowManager.LayoutParams layoutParams = window.getAttributes();
+        if (ignoreNotch) {
+            layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        } else {
+            layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+        }
+        window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
     }
 
-    public static DisplayMetrics currentDisplayMetrics;
-
-    public static void updateWindowSize(Activity activity) {
-        currentDisplayMetrics = getDisplayMetrics(activity);
-
-        View dimensionView = activity.findViewById(R.id.dimension_tracker);
-
-        if(dimensionView != null) {
-            int width = dimensionView.getWidth();
-            int height = dimensionView.getHeight();
-            if(width != 0 && height != 0) {
-                Log.i("Tools", "Using dimension_tracker for display dimensions; W="+width+" H="+height);
-                CallbackBridge.physicalWidth = width;
-                CallbackBridge.physicalHeight = height;
-                return;
-            }else{
-                Log.e("Tools","Dimension tracker detected but dimensions out of date. Please check usage.", new Exception());
+    @SuppressWarnings("deprecation")
+    private static void setLegacyFullscreen(View insetView, boolean fullscreen) {
+        View.OnSystemUiVisibilityChangeListener listener = (visibility)->{
+            if(fullscreen && (visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                insetView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+            }else if(!fullscreen) {
+                insetView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
             }
+        };
+        listener.onSystemUiVisibilityChange(insetView.getSystemUiVisibility());
+        insetView.setOnSystemUiVisibilityChangeListener(listener);
+    }
+
+    public static void setInsetsMode(Activity activity, boolean noSystemBars, boolean ignoreNotch) {
+        Window window = activity.getWindow();
+        View insetView = activity.findViewById(android.R.id.content);
+        // Don't ignore system bars in window mode (will put game behind window button bar)
+        if(SDK_INT >= Build.VERSION_CODES.N && activity.isInMultiWindowMode()) noSystemBars = false;
+
+        int bgColor;
+        // The status bars are completely transparent and will take their color from the inset view
+        // background drawable.
+        if(!noSystemBars) bgColor = activity.getResources().getColor(R.color.background_status_bar);
+        else bgColor = Color.BLACK;
+
+        // On API 35 onwards, apps are edge-to-edge by default and are controlled entirely though the
+        // inset API. On levels below, we still need to set the correct cutout mode.
+        if(SDK_INT >= Build.VERSION_CODES.P) setCutoutMode(window, ignoreNotch);
+
+        // The AppCompat APIs don't work well, and break when opening alert dialogs on older Android
+        // versions. Use the legacy fullscreen flags for lower APIs. (notch is already handled above)
+        if(SDK_INT < Build.VERSION_CODES.R) {
+            setLegacyFullscreen(insetView, noSystemBars);
+            return;
+        }
+        // Code below expects this to be set to false, since that's the SDK 35 default.
+        if(SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            window.setDecorFitsSystemWindows(false);
         }
 
-        CallbackBridge.physicalWidth = currentDisplayMetrics.widthPixels;
-        CallbackBridge.physicalHeight = currentDisplayMetrics.heightPixels;
+        WindowInsetsController insetsController = window.getInsetsController();
+        if(insetsController != null) {
+            insetsController.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            if(noSystemBars) insetsController.hide(WindowInsets.Type.systemBars());
+            else insetsController.show(WindowInsets.Type.systemBars());
+        }
+
+        boolean fFullscreen = noSystemBars;
+        insetView.setOnApplyWindowInsetsListener((v, windowInsets) -> {
+            int insetMask = 0;
+            if(!fFullscreen) insetMask |= WindowInsets.Type.systemBars();
+            if(!ignoreNotch) insetMask |= WindowInsets.Type.displayCutout();
+            if(insetMask != 0) {
+                Insets insets = windowInsets.getInsets(insetMask);
+                v.setBackground(new InsetBackground(insets,bgColor));
+                insetView.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            }else {
+                insetView.setPadding(0, 0, 0, 0);
+                v.setBackground(null);
+            }
+            return WindowInsets.CONSUMED;
+        });
+        insetView.requestApplyInsets();
     }
+
+    // Note: this should *NOT* be used for positioning and sizing things on the screen
+    public static DisplayMetrics currentDisplayMetrics;
 
     public static float dpToPx(float dp) {
         //Better hope for the currentDisplayMetrics to be good
@@ -696,20 +730,21 @@ public final class Tools {
         return px / currentDisplayMetrics.density;
     }
 
-    public static void copyAssetFile(Context ctx, String fileName, String output, boolean overwrite) throws IOException {
-        copyAssetFile(ctx, fileName, output, new File(fileName).getName(), overwrite);
+    public static void copyAssetFile(Context ctx, String assetPath, String output, boolean overwrite) throws IOException {
+        String fileName = FileUtils.getFileName(assetPath);
+        if(fileName == null) fileName = assetPath;
+        File outputFile = new File(output, fileName);
+        copyAssetFile(ctx.getAssets(), assetPath, outputFile, overwrite);
     }
 
-    public static void copyAssetFile(Context ctx, String fileName, String output, String outputName, boolean overwrite) throws IOException {
-        File parentFolder = new File(output);
-        FileUtils.ensureDirectory(parentFolder);
-        File destinationFile = new File(output, outputName);
-        if(!destinationFile.exists() || overwrite){
-            try(InputStream inputStream = ctx.getAssets().open(fileName)) {
-                try (OutputStream outputStream = new FileOutputStream(destinationFile)){
-                    IOUtils.copy(inputStream, outputStream);
-                }
-            }
+    public static void copyAssetFile(AssetManager assetManager, String fileName, File output, boolean overwrite) throws IOException {
+        FileUtils.ensureParentDirectory(output);
+        if(output.exists() && !overwrite) return;
+        try (
+                InputStream inputStream = assetManager.open(fileName);
+                FileOutputStream fileOutputStream = new FileOutputStream(output)
+        ){
+            IOUtils.copy(inputStream, fileOutputStream);
         }
     }
 
@@ -1080,18 +1115,6 @@ public final class Tools {
         }catch (IOException e) {
             Log.i("SHA1","Fake-matching a hash due to a read error",e);
             return true;
-        }
-    }
-
-    public static void ignoreNotch(boolean shouldIgnore, Activity ctx){
-        if (SDK_INT >= P) {
-            if (shouldIgnore) {
-                ctx.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-            } else {
-                ctx.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
-            }
-            ctx.getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
-            Tools.updateWindowSize(ctx);
         }
     }
 

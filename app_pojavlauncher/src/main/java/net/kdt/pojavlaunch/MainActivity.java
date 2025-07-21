@@ -1,14 +1,12 @@
 package net.kdt.pojavlaunch;
 
-import static net.kdt.pojavlaunch.Tools.currentDisplayMetrics;
+
 import static net.kdt.pojavlaunch.Tools.dialogForceClose;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_ENABLE_GYRO;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_SUSTAINED_PERFORMANCE;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_USE_ALTERNATE_SURFACE;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_VIRTUAL_MOUSE_START;
 import static org.lwjgl.glfw.CallbackBridge.sendKeyPress;
-import static org.lwjgl.glfw.CallbackBridge.windowHeight;
-import static org.lwjgl.glfw.CallbackBridge.windowWidth;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -43,6 +41,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.kdt.LoggerView;
 
+import net.kdt.pojavlaunch.authenticator.accounts.PojavProfile;
 import net.kdt.pojavlaunch.customcontrols.ControlButtonMenuListener;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
 import net.kdt.pojavlaunch.customcontrols.ControlDrawerData;
@@ -64,7 +63,7 @@ import net.kdt.pojavlaunch.services.GameService;
 import net.kdt.pojavlaunch.tasks.AsyncAssetManager;
 import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
-import net.kdt.pojavlaunch.value.MinecraftAccount;
+import net.kdt.pojavlaunch.authenticator.accounts.MinecraftAccount;
 
 import org.lwjgl.glfw.CallbackBridge;
 
@@ -91,6 +90,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     private HotbarView mHotbarView;
 
     Instance instance;
+    MinecraftAccount minecraftAccount;
 
     private ArrayAdapter<String> gameActionArrayAdapter;
     private AdapterView.OnItemClickListener gameActionClickListener;
@@ -104,6 +104,12 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         instance = InstanceManager.loadSelectedInstance();
+        minecraftAccount = PojavProfile.getCurrentProfileContent(true);
+        if(instance == null) {
+            Toast.makeText(this, R.string.instance_dir_missing, Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
         AsyncAssetManager.extractDefaultSettings(this, instance.getGameDirectory());
         MCOptionUtils.load(instance.getGameDirectory().getAbsolutePath());
 
@@ -179,10 +185,6 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             isInputStackCall = mVersionInfo.arguments != null;
             CallbackBridge.nativeSetUseInputStackQueue(isInputStackCall);
 
-            Tools.getDisplayMetrics(this);
-            windowWidth = Tools.getDisplayFriendlyRes(currentDisplayMetrics.widthPixels, 1f);
-            windowHeight = Tools.getDisplayFriendlyRes(currentDisplayMetrics.heightPixels, 1f);
-
 
             // Menu
             gameActionArrayAdapter = new ArrayAdapter<>(this,
@@ -240,7 +242,6 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     public void onAttachedToWindow() {
         // Post to get the correct display dimensions after layout.
-        LauncherPreferences.computeNotchSize(this);
         mControlLayout.post(()->{
             Tools.getDisplayMetrics(this);
             loadControls();
@@ -313,7 +314,6 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         mControlLayout.post(()->{
             // Child of mControlLayout, so refreshing size here is correct
             minecraftGLView.refreshSize();
-            Tools.updateWindowSize(this);
             mControlLayout.refreshControlButtonPositions();
         });
     }
@@ -353,7 +353,6 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             Log.w("runCraft","Incompatible renderer "+Tools.LOCAL_RENDERER+ " will be replaced with "+firstCompatibleRenderer);
             Tools.LOCAL_RENDERER = firstCompatibleRenderer;
         }
-        MinecraftAccount minecraftAccount = PojavProfile.getCurrentProfileContent(this, null);
         Logger.appendToLog("--------- Starting game with Launcher Debug!");
         Tools.printLauncherInfo(versionId, instance.getLaunchArgs());
         JREUtils.redirectAndPrintJRELog();
