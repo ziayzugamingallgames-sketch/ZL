@@ -68,7 +68,7 @@
     <string name="mcl_setting_veroption_release">Bản phát hành</string>
     <string name="mcl_setting_veroption_snapshot">Snapshot</string>
     <string name="mcl_setting_veroption_oldalpha">Bản Alpha cũ</string>
-    <string name="mcl_setting_veroption_oldbeta">Bản Beta cũ</string
+    <string name="mcl_setting_veroption_oldbeta">Bản Beta cũ</string>
     <string name="mcl_setting_java_sandbox">Thực thi tệp .jar trong môi trường thử nghiệm (sandbox)</string>
     <string name="mcl_setting_java_sandbox_subtitle">Điều khiển tính khả dụng của trình quản lý bảo mật môi trường thử nghiệm (sandbox) khi thực thi tệp .jar.</string>
     <string name="mcl_version_clone">Nhân bản</string>
@@ -180,7 +180,7 @@
     <string name="multirt_config_add">Thêm mới</string>
     <string name="multirt_title">Quản lí Java Runtime</string>
     <string name="multirt_subtitle">Quản lý các hệ thống thời gian chạy Java.</string>
-    <string name="multirt_progress_caching">Đang lưu vào bộ nhớ đệm...</string>
+    <string name="multirt_progress_caching">Đang lưu vào bộ nhớ đệm…</string>
     <string name="multirt_config_setdefault">Đặt làm mặc định</string>
     <string name="multirt_config_setdefault_already">Mặc định</string>
     <string name="multirt_config_removeerror_last">Bạn phải có ít nhất một hệ thống thời gian chạy Java đã được cài đặt.</string>
@@ -251,7 +251,7 @@
     <string name="main_add_account">Thêm tài khoản</string>
     <string name="tasks_ongoing">Các tác vụ đang chạy, vui lòng chờ</string>
     <string name="no_saved_accounts">Không có tài khoản nào được lưu</string>
-    <string name="mc_download_failed">Không thể tải Minecraft! Điều này có thể do kết nối mạng kém, tệp được đặt sai vị trí, ...</string>
+    <string name="mc_download_failed">Không thể tải Minecraft! Điều này có thể do kết nối mạng kém, tệp được đặt sai vị trí, …</string>
     <string name="xerr_unknown">Lỗi API Xbox Live chưa rõ, mã %d</string>
     <string name="xerr_no_account">Có vẻ như bạn chưa có một tài khoản Xbox Live. Đăng nhập vào https://minecraft.net/ một lần và thử lại.</string>
     <string name="xerr_adult_verification">Tài khoản của bạn cần được xác thực bởi người lớn.</string>
@@ -269,7 +269,6 @@
     <string name="storage_required">MojoLauncher cần kho dữ liệu bên ngoài để gắn vào. Vui lòng kết nối lại và khởi động lại ứng dụng.</string>
     <string name="mcl_setting_title_buttonallcaps">Chỉ được dùng những chữ cái in hoa trong các nhãn nút</string>
     <string name="mcl_setting_subtitle_buttonallcaps">Tắt đi nếu bạn muốn sử dụng chữ cái thường trong mục điều khiển.</string>
-    <string name="create_profile">Tạo cấu hình mới</string>
     <string name="preference_shader_dump_title">Kích hoạt đổ bóng</string>
     <string name="preference_shader_dump_description">Ghi các trình đổ bóng đã chuyển đổi vào tệp nhật ký.</string>
     <string name="percent_format">%d%%</string>
@@ -302,7 +301,6 @@
     <string name="fabric_dl_game_version">Phiên bản Minecraft</string>
     <string name="fabric_dl_install">Cài đặt</string>
     <string name="fabric_dl_cant_read_meta">Không đọc được siêu dữ liệu trình %s. Vui lòng thử lại sau.</string>
-    <string name="create_profile_vanilla_like_versions">Phiên bản giống Vanilla</string>
     <string name="modloader_dl_install_fabric_instance">Tạo phiên bản Fabric mới</string>
     <string name="modloader_dl_install_quilt_instance">Tạo phiên bản Quilt mới</string>
     <string name="modloader_dl_install_forge_instance">Tạo phiên bản Forge mới</string>
