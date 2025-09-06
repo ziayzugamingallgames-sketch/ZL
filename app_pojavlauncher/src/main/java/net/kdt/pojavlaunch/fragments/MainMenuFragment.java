@@ -3,6 +3,7 @@ package net.kdt.pojavlaunch.fragments;
 import static net.kdt.pojavlaunch.Tools.openPath;
 import static net.kdt.pojavlaunch.Tools.shareLog;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -23,6 +24,7 @@ import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.instances.InstanceManager;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
+import net.kdt.pojavlaunch.utils.FileUtils;
 
 import java.io.File;
 
@@ -62,7 +64,7 @@ public class MainMenuFragment extends Fragment {
 
         mShareLogsButton.setOnClickListener((v) -> shareLog(requireContext()));
 
-        mOpenDirectoryButton.setOnClickListener((v)-> openPath(v.getContext(), getCurrentProfileDirectory(), false));
+        mOpenDirectoryButton.setOnClickListener((v)-> openGameDirectory(v.getContext()));
 
 
         mNewsButton.setOnLongClickListener((v)->{
@@ -71,8 +73,13 @@ public class MainMenuFragment extends Fragment {
         });
     }
 
-    private File getCurrentProfileDirectory() {
-        return InstanceManager.getSelectedListedInstance().getGameDirectory();
+    private void openGameDirectory(Context context) {
+        File gameDirectory = InstanceManager.getSelectedListedInstance().getGameDirectory();
+        if(FileUtils.ensureDirectorySilently(gameDirectory)) {
+            openPath(context, gameDirectory, false);
+        }else {
+            Toast.makeText(context, R.string.gamedir_open_failed, Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
