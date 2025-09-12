@@ -33,8 +33,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Set JAVA_HOME
-        run: echo "JAVA_HOME=/opt/java/11.0.14" >> $GITHUB_ENV
       - name: Create out directory
         run: mkdir out
       - name: Build Publishing .aab
