@@ -10,7 +10,7 @@
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
 
         <item name="android:textSize">@dimen/_12ssp</item>
-
+        <item name="android:fontFamily">@font/poppins</item>
     </style>
 
     <style name="LauncherFragment_Divider">
@@ -25,6 +25,14 @@
 
     <style name="LauncherMenuButton.Universal" parent="LauncherMenuButton">
         <item name="android:layout_height">@dimen/_66sdp</item>
+        <item name="android:textColor">@color/primary_text</item>
+        <item name="android:textSize">@dimen/_14ssp</item>
+        <item name="android:drawablePadding">@dimen/padding_heavy</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">@dimen/padding_heavy</item>
+        <item name="android:paddingEnd">@dimen/padding_heavy</item>
+        <item name="android:stateListAnimator">@anim/button_press_animation</item>
+        <item name="android:foreground">?android:attr/selectableItemBackground</item>
     </style>
 
     <style name="ThickDivider">

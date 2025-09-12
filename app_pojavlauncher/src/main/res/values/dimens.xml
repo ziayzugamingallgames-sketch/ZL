@@ -7,14 +7,14 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <!-- Padding -->
-    <dimen name="padding_tiny">@dimen/_1sdp</dimen>
-    <dimen name="padding_small">@dimen/_2sdp</dimen>
-    <dimen name="padding_medium">@dimen/_4sdp</dimen>
-    <dimen name="padding_moderate">@dimen/_6sdp</dimen>
-    <dimen name="padding_heavy">@dimen/_12sdp</dimen>
-    <dimen name="padding_large">@dimen/_16sdp</dimen>
-    <dimen name="padding_extra_large">@dimen/_24sdp</dimen>
-    <dimen name="padding_extra_extra_large">@dimen/_32sdp</dimen>
+    <dimen name="padding_tiny">1dp</dimen>
+    <dimen name="padding_small">4dp</dimen>
+    <dimen name="padding_medium">8dp</dimen>
+    <dimen name="padding_moderate">12dp</dimen>
+    <dimen name="padding_heavy">16dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+    <dimen name="padding_extra_large">32dp</dimen>
+    <dimen name="padding_extra_extra_large">48dp</dimen>
 
     <!-- Input text padding -->
     <dimen name="padding_input_bottom">@dimen/padding_heavy</dimen>

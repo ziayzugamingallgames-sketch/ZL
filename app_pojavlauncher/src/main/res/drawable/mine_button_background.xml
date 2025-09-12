@@ -1,6 +1,66 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true" android:drawable="@drawable/mine_button_focused" />
-    <item android:state_enabled="false" android:drawable="@drawable/mine_button_focused" />
-    <item android:drawable="@drawable/mine_button_unfocused" />
+    <item android:state_pressed="true">
+        <layer-list>
+            <!-- Main button color (slightly darker to simulate press) -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="12dp" />
+                    <solid android:color="@color/minebutton_color_darker" />
+                </shape>
+            </item>
+            <!-- Inner shadow -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="12dp" />
+                    <gradient
+                        android:angle="270"
+                        android:startColor="#40000000"
+                        android:centerColor="#00000000"
+                        android:endColor="#00000000"
+                        android:type="linear" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <ripple android:color="#80FFFFFF">
+            <item>
+                <layer-list>
+                    <!-- Main button color -->
+                    <item>
+                        <shape android:shape="rectangle">
+                            <corners android:radius="12dp" />
+                            <solid android:color="@color/minebutton_color" />
+                        </shape>
+                    </item>
+                    <!-- Subtle glow effect -->
+                    <item>
+                        <shape android:shape="rectangle">
+                            <corners android:radius="12dp" />
+                            <gradient
+                                android:type="radial"
+                                android:centerX="0.5"
+                                android:centerY="0.5"
+                                android:gradientRadius="100%p"
+                                android:startColor="#4000BFFF"
+                                android:endColor="#0000BFFF" />
+                        </shape>
+                    </item>
+                    <!-- Shimmer effect (conceptual, actual animation handled by code) -->
+                    <item>
+                        <shape android:shape="rectangle">
+                            <corners android:radius="12dp" />
+                            <gradient
+                                android:angle="270"
+                                android:startColor="#00FFFFFF"
+                                android:centerColor="#33FFFFFF"
+                                android:endColor="#00FFFFFF"
+                                android:type="linear" />
+                        </shape>
+                    </item>
+                </layer-list>
+            </item>
+        </ripple>
+    </item>
 </selector>
