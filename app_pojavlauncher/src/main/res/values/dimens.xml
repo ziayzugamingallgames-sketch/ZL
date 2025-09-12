@@ -18,7 +18,7 @@
 
     <!-- Input text padding -->
     <dimen name="padding_input_bottom">@dimen/padding_heavy</dimen>
-    <dimen name="padding_input_top">@dimen/_11sdp</dimen>
+    <dimen name="padding_input_top">11dp</dimen>
 
     <!-- Main Activity components -->
     <dimen name="empty_icon_width">60dp</dimen>
@@ -28,7 +28,7 @@
     <dimen name="navigation_item_icon_size">24dp</dimen>
 
     <!-- Fragment padding -->
-    <dimen name="fragment_padding_medium">@dimen/_10sdp</dimen>
+    <dimen name="fragment_padding_medium">10dp</dimen>
     <!-- Misc paddings -->
     <dimen name="profile_editor_image_padding">@dimen/padding_small</dimen>
 </resources>

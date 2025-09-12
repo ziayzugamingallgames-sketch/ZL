@@ -2,6 +2,7 @@
 <resources>
     <color name="background_app">#1A1A2E</color>
     <color name="background_card">#33FFFFFF</color> <!-- Semi-transparent white for glass effect -->
+    <color name="background_overlay">#80000000</color> <!-- Semi-transparent black for overlay -->
     <color name="background_bottom_bar">#1A1A2E</color>
     <color name="background_status_bar">#1A1A2E</color>
 
