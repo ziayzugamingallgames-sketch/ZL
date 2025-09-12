@@ -126,10 +126,10 @@ android {
             resValue 'string', 'storageProviderAuthorities', 'git.artdeell.mojo.scoped.gamefolder'
             resValue 'string', 'application_package', 'git.artdeell.mojo'
         }
-        gplay {
-            initWith release
-            signingConfig signingConfigs.googlePlayBuild
-        }
+        // gplay {
+        //     initWith release
+        //     signingConfig signingConfigs.googlePlayBuild
+        // }
     }
 
     ndkVersion = "28.2.13676358"
@@ -175,15 +175,16 @@ class AssetTaskRegistrar {
     AssetTaskRegistrar(Project project) {
         this.project = project
 
-        targetDownloadDir = new File(project.projectDir, "build/intermediates/download_deps")
-        projectJarDir = new File(project.projectDir, "build/intermediates/package_jar_deps")
-        createDirectories targetDownloadDir
-        createDirectories projectJarDir
     }
 
     def setVariant(variant) {
         variantName = variant.getName().capitalize()
         mergeAssetsTask = variant.getPreBuildProvider().get()
+
+        targetDownloadDir = new File(project.projectDir, "build/intermediates/download_deps/${variantName.toLowerCase()}")
+        projectJarDir = new File(project.projectDir, "build/intermediates/package_jar_deps")
+        createDirectories targetDownloadDir
+        createDirectories projectJarDir
 
         targetAssetsDir = new File(project.projectDir, "build/intermediates/remote_asset_set/${variantName.toLowerCase()}/")
         createDirectories(targetAssetsDir)
@@ -300,6 +301,11 @@ afterEvaluate {
 
         registrar.onlineJarDependency cacioJarUrl, "caciocavallo17", "cacio-shared", "components/caciocavallo17"
         registrar.onlineJarDependency cacioJarUrl, "caciocavallo17", "cacio-tta", "components/caciocavallo17"
+    }
+
+    // Explicitly declare dependency to resolve implicit dependency warning
+    project.tasks.named("unzipComponentRuntime17FullDebug") {
+        dependsOn project.tasks.named("downloadComponentRuntime17FullDebug")
     }
 }
 
