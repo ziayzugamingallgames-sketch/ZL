@@ -326,8 +326,8 @@
     <string name="exception_failed_to_unpack_jre17">Nie udało się zainstalować JRE 17</string>
     <string name="newdl_starting">Czytanie metadanych gry…</string>
     <string name="newdl_downloading_metadata">Pobieranie metadanych gry (%s)</string>
-    <string name="newdl_downloading_game_files">Pobieranie gry... (%d/%d, %.2f MB/s)</string>
-    <string name="newdl_downloading_game_files_size">Pobieranie gry... (%.2f/%.2f MB, %.2f MB/s)</string>
+    <string name="newdl_downloading_game_files" formatted="false">Pobieranie gry... (%d/%d, %.2f MB/s)</string>
+    <string name="newdl_downloading_game_files_size" formatted="false">Pobieranie gry... (%.2f/%.2f MB, %.2f MB/s)</string>
     <string name="cropper_title">Wybierz region obrazu</string>
     <string name="cropper_lock_vertical">Blokada wertykalna</string>
     <string name="cropper_lock_horizontal">Blokada horyzontalna</string>

@@ -175,7 +175,7 @@
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintTop_toTopOf="@+id/mc_version_spinner"
 		app:tint="@color/primary_text"
-		android:background="@drawable/background_icon_edit" />
+		/>
 
 
 	<!-- This view is for cosmetic purpose only -->
