@@ -12,7 +12,6 @@ jobs:
     env:
       UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
-      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     steps:
       - name: Checkout
         uses: actions/checkout@v3
