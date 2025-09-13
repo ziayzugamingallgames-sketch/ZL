@@ -45,6 +45,7 @@ jobs:
         with:
           arguments: :app_pojavlauncher:bundleFullGplay
       - name: Move AAB
+        if: github.repository_owner == 'MojoLauncher' && github.ref_name == 'v3_openjdk'
         run: mv app_pojavlauncher/build/outputs/bundle/fullGplay/app_pojavlauncher-full-gplay.aab out/app-gplay.aab
 
       - name: Build Debug .apk
