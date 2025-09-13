@@ -49,11 +49,13 @@ jobs:
       - name: Build Debug .apk
         run: |
           # Build the launcher
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ./gradlew :app_pojavlauncher:assembleFullDebug
           mv app_pojavlauncher/build/outputs/apk/full/debug/app_pojavlauncher-full-debug.apk out/app-debug-full.apk
 
       - name: Build Debug .apk (No runtime)
         run: |
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ./gradlew :app_pojavlauncher:assembleNoruntimeDebug
           mv app_pojavlauncher/build/outputs/apk/noruntime/debug/app_pojavlauncher-noruntime-debug.apk out/app-debug-noruntime.apk
 
