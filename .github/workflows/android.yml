@@ -32,9 +32,9 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '21'
-      - name: Set JAVA_HOME for Java 21
-        run: echo "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> $GITHUB_ENV
+          java-version: '17'
+      - name: Set JAVA_HOME for Java 17
+        run: echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
       - name: Create out directory
         run: mkdir out
       - name: Build Publishing .aab
