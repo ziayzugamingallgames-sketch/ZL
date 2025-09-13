@@ -33,8 +33,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Set JAVA_HOME
-        run: echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
       - name: Grant execute permissions to gradlew
         run: chmod +x gradlew
       - name: Create out directory
