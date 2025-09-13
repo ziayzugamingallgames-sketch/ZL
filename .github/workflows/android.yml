@@ -26,20 +26,26 @@ jobs:
           name: output-aar
           path: app_pojavlauncher/libs
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/gradle-build-action@v2
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: Set JAVA_HOME
+        run: echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+      - name: Grant execute permissions to gradlew
+        run: chmod +x gradlew
       - name: Create out directory
         run: mkdir out
       - name: Build Publishing .aab
         if: github.repository_owner == 'MojoLauncher' && github.ref_name == 'v3_openjdk'
-        run: |
-          ./gradlew :app_pojavlauncher:bundleFullGplay
-          mv app_pojavlauncher/build/outputs/bundle/fullGplay/app_pojavlauncher-full-gplay.aab out/app-gplay.aab
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: :app_pojavlauncher:bundleFullGplay
+      - name: Move AAB
+        run: mv app_pojavlauncher/build/outputs/bundle/fullGplay/app_pojavlauncher-full-gplay.aab out/app-gplay.aab
 
       - name: Build Debug .apk
         run: |
